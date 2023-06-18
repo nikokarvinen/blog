@@ -40,7 +40,13 @@ app.locals.userRepository = appDataSource.getRepository(User)
 app.locals.postRepository = appDataSource.getRepository(Post)
 
 // Initialize session
-app.use(session({ secret: process.env.SESSION_SECRET as string, resave: false, saveUninitialized: false }))
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET as string,
+    resave: false,
+    saveUninitialized: false,
+  })
+)
 
 // Initialize Passport
 app.use(passport.initialize())
@@ -49,16 +55,27 @@ app.use(passport.session())
 // Initialize Passport configuration
 initialize(
   passport,
-  async email => await app.locals.userRepository.findOne({ email }),
-  async id => await app.locals.userRepository.findOne({ id })
+  async (email) => {
+    console.log(`Finding user with email: ${email}`)
+    const users = await app.locals.userRepository.find()
+    return users.find((user: User) => user.email === email)
+  },
+  async (id) => {
+    console.log(`Finding user with id: ${id}`)
+    const users = await app.locals.userRepository.find()
+    return users.find((user: User) => user.id === id)
+  }
 )
 
 app.use(express.json())
 app.use('/', router)
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error(err)
-  res.status(500).json({ message: 'An unexpected error occurred' })
+  console.error(err.stack)
+  res.status(500).send({
+    status: 'error',
+    message: err.message,
+  })
 })
 
 const main = async () => {

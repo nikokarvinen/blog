@@ -30,10 +30,26 @@ export function initialize(
   }
 
   passport.use(new LocalStrategy({ usernameField: 'email' }, authenticateUser))
-  passport.serializeUser((user: any, done) => done(null, user.id))
+  passport.serializeUser((user: any, done) => {
+    console.log('Serializing user with id:', user.id) // add log here
+    done(null, user.id)
+  })
   passport.deserializeUser((id: number, done) => {
-    return getUserById(id)
-      .then((user) => done(null, user))
-      .catch((err) => done(err, null))
+    console.log('Deserializing user with id:', id) // and here
+
+    if (id !== undefined && id !== null) {
+      return getUserById(id)
+        .then((user) => {
+          console.log('Found user:', user)
+          done(null, user)
+        })
+        .catch((err) => {
+          console.error('Error fetching user:', err)
+          done(err, null)
+        })
+    } else {
+      console.error('Invalid user ID')
+      done(new Error('Invalid user ID'), null)
+    }
   })
 }

@@ -19,7 +19,6 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 })
 
 // Register
-// Register
 router.post('/register', async (req, res) => {
   if (!req.body.email || !req.body.password) {
     return res.status(400).json({ error: 'Email and password are required' })
@@ -38,20 +37,50 @@ router.post('/register', async (req, res) => {
 
     const results = await req.userRepository.save(user)
     res.send(results)
-  } catch {
-    res.redirect('/register')
+  } catch (error) {
+    const err = error as any
+    if (err.code === '23505') {
+      // '23505' is the error code for unique_violation in PostgreSQL
+      res.status(409).json({ error: 'An user with this email already exists.' })
+    } else {
+      res
+        .status(500)
+        .json({ error: 'An error occurred while creating the user' })
+    }
   }
 })
 
 // Login
-router.post(
-  '/login',
-  passport.authenticate('local', {
-    successRedirect: '/',
-    failureRedirect: '/login',
-    failureFlash: true,
-  })
-)
+// Login
+router.post('/login', async (req: Request, res: Response) => {
+  if (!req.body.email || !req.body.password) {
+    return res.status(400).json({ error: 'Email and password are required' })
+  }
+
+  if (!req.userRepository) {
+    return res.status(500).json({ error: 'userRepository not initialized' })
+  }
+
+  try {
+    const user = await req.userRepository.findOne({
+      where: { email: req.body.email },
+    })
+
+    if (!user) {
+      return res.status(400).json({ error: 'User not found' })
+    }
+
+    const isValid = await bcrypt.compare(req.body.password, user.password)
+
+    if (!isValid) {
+      return res.status(400).json({ error: 'Incorrect password' })
+    }
+
+    return res.json({ user: user.toAuthJSON() })
+  } catch (err) {
+    return res.status(500).json({ error: 'An error occurred while logging in' })
+  }
+})
 
 // READ all users
 router.get('/users', async (req, res) => {
