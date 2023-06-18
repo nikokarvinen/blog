@@ -1,30 +1,52 @@
-import express, { Request, Response } from 'express'
+import express, { NextFunction, Request, Response } from 'express'
+import { Repository } from 'typeorm'
 import { User } from './entity/User'
-import { appDataSource } from './index'
+
+declare module 'express-serve-static-core' {
+  interface Request {
+    userRepository?: Repository<User>
+  }
+}
 
 const router = express.Router()
 
+// Middleware to attach repositories to request object
+router.use((req: Request, res: Response, next: NextFunction) => {
+  req.userRepository = req.app.locals.userRepository
+  next()
+})
+
 // READ all users
 router.get('/users', async (req, res) => {
-  const userRepository = appDataSource.getRepository(User)
-  const users = await userRepository.find()
+  if (!req.userRepository) {
+    return res.status(500).json({ error: 'userRepository not initialized' })
+  }
+
+  const users = await req.userRepository.find()
   res.json(users)
 })
 
 // CREATE a new user
 router.post('/users', async (req, res) => {
-  const userRepository = appDataSource.getRepository(User)
-  const newUser = userRepository.create(req.body) // create a new user with the submitted data
-  const results = await userRepository.save(newUser) // saves the new user
+  if (!req.userRepository) {
+    return res.status(500).json({ error: 'userRepository not initialized' })
+  }
+
+  const newUser = req.userRepository.create(req.body)
+  const results = await req.userRepository.save(newUser)
   res.send(results)
 })
 
 // READ a single user by ID
 router.get('/users/:id', async (req, res) => {
-  const userRepository = appDataSource.getRepository(User)
-  const user = await userRepository.findOne({
+  if (!req.userRepository) {
+    return res.status(500).json({ error: 'userRepository not initialized' })
+  }
+
+  const user = await req.userRepository.findOne({
     where: { id: Number(req.params.id) },
   })
+
   if (user) {
     res.send(user)
   } else {
@@ -34,8 +56,11 @@ router.get('/users/:id', async (req, res) => {
 
 // UPDATE a user
 router.put('/users/:id', async function (req: Request, res: Response) {
-  const userRepository = appDataSource.getRepository(User)
-  const user = await userRepository.findOne({
+  if (!req.userRepository) {
+    return res.status(500).json({ error: 'userRepository not initialized' })
+  }
+
+  const user = await req.userRepository.findOne({
     where: { id: Number(req.params.id) },
   })
 
@@ -44,15 +69,18 @@ router.put('/users/:id', async function (req: Request, res: Response) {
     return
   }
 
-  userRepository.merge(user, req.body)
-  const results = await userRepository.save(user)
+  req.userRepository.merge(user, req.body)
+  const results = await req.userRepository.save(user)
   res.send(results)
 })
 
 // DELETE a user
 router.delete('/users/:id', async (req, res) => {
-  const userRepository = appDataSource.getRepository(User)
-  const result = await userRepository.delete(Number(req.params.id))
+  if (!req.userRepository) {
+    return res.status(500).json({ error: 'userRepository not initialized' })
+  }
+
+  const result = await req.userRepository.delete(Number(req.params.id))
   res.send(result)
 })
 

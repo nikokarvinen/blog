@@ -1,7 +1,7 @@
-import { default as bodyParser } from 'body-parser'
 import 'dotenv/config'
-import express from 'express'
+import express, { NextFunction, Request, Response } from 'express'
 import { DataSource, DataSourceOptions } from 'typeorm'
+import { Post } from './entity/Post'
 import { User } from './entity/User'
 import router from './routes'
 
@@ -33,27 +33,14 @@ appDataSource
 const app = express()
 const port = 3000
 
+app.locals.userRepository = appDataSource.getRepository(User)
+app.locals.postRepository = appDataSource.getRepository(Post)
 app.use(express.json())
-app.use(bodyParser.json())
 app.use('/', router)
 
-app.get('/', (req, res) => res.send('Hello World!'))
-
-app.post('/users', async (req, res) => {
-  const { firstName, lastName, age } = req.body
-  const userRepo = appDataSource.getRepository(User)
-  const user = new User()
-  user.firstName = firstName
-  user.lastName = lastName
-  user.age = age
-  await userRepo.save(user)
-  res.json(user)
-})
-
-app.get('/users', async (req, res) => {
-  const userRepo = appDataSource.getRepository(User)
-  const users = await userRepo.find()
-  res.json(users)
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error(err)
+  res.status(500).json({ message: 'An unexpected error occurred' })
 })
 
 const main = async () => {
