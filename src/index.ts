@@ -1,8 +1,11 @@
 import 'dotenv/config'
 import express, { NextFunction, Request, Response } from 'express'
+import session from 'express-session'
+import passport from 'passport'
 import { DataSource, DataSourceOptions } from 'typeorm'
 import { Post } from './entity/Post'
 import { User } from './entity/User'
+import { initialize } from './passport-config'
 import router from './routes'
 
 // database configuration
@@ -35,6 +38,21 @@ const port = 3000
 
 app.locals.userRepository = appDataSource.getRepository(User)
 app.locals.postRepository = appDataSource.getRepository(Post)
+
+// Initialize session
+app.use(session({ secret: process.env.SESSION_SECRET as string, resave: false, saveUninitialized: false }))
+
+// Initialize Passport
+app.use(passport.initialize())
+app.use(passport.session())
+
+// Initialize Passport configuration
+initialize(
+  passport,
+  async email => await app.locals.userRepository.findOne({ email }),
+  async id => await app.locals.userRepository.findOne({ id })
+)
+
 app.use(express.json())
 app.use('/', router)
 

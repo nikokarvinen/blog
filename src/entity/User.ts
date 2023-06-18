@@ -15,6 +15,9 @@ export class User {
   @Column()
   age!: number
 
+  @Column()
+  password!: string
+
   // Here we add the posts field to represent the relationship to the Post entity
   @OneToMany(() => Post, (post) => post.user)
   posts!: Post[]

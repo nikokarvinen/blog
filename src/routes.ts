@@ -1,4 +1,6 @@
+import bcrypt from 'bcrypt'
 import express, { NextFunction, Request, Response } from 'express'
+import passport from 'passport'
 import { Repository } from 'typeorm'
 import { User } from './entity/User'
 
@@ -15,6 +17,41 @@ router.use((req: Request, res: Response, next: NextFunction) => {
   req.userRepository = req.app.locals.userRepository
   next()
 })
+
+// Register
+// Register
+router.post('/register', async (req, res) => {
+  if (!req.body.email || !req.body.password) {
+    return res.status(400).json({ error: 'Email and password are required' })
+  }
+
+  if (!req.userRepository) {
+    return res.status(500).json({ error: 'userRepository not initialized' })
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(req.body.password, 10)
+    const user = req.userRepository.create({
+      ...req.body,
+      password: hashedPassword,
+    })
+
+    const results = await req.userRepository.save(user)
+    res.send(results)
+  } catch {
+    res.redirect('/register')
+  }
+})
+
+// Login
+router.post(
+  '/login',
+  passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/login',
+    failureFlash: true,
+  })
+)
 
 // READ all users
 router.get('/users', async (req, res) => {
