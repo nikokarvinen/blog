@@ -1,6 +1,7 @@
+import jwt from 'jsonwebtoken'
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
+import { Comment } from './Comment'
 import { Post } from './Post'
-import jwt from 'jsonwebtoken';
 
 @Entity('app_user')
 export class User {
@@ -26,25 +27,31 @@ export class User {
   @OneToMany(() => Post, (post) => post.user)
   posts!: Post[]
 
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comments!: Comment[]
+
   public toAuthJSON = (): { [key: string]: any } => {
     return {
       id: this.id,
       email: this.email,
-      token: this.generateJWT(), 
+      token: this.generateJWT(),
       firstName: this.firstName,
       lastName: this.lastName,
     }
   }
 
   public generateJWT = (): string => {
-    const today = new Date();
-    const expirationDate = new Date(today);
-    expirationDate.setDate(today.getDate() + 60); // Set expiry to 60 days from now
+    const today = new Date()
+    const expirationDate = new Date(today)
+    expirationDate.setDate(today.getDate() + 60) // Set expiry to 60 days from now
 
-    return jwt.sign({
-      email: this.email,
-      id: this.id,
-      exp: parseInt(expirationDate.getTime() / 1000 + '', 10),
-    }, process.env.JWT_SECRET || 'secret'); // Make sure to replace 'secret' with your own secret or key stored in environment variables
+    return jwt.sign(
+      {
+        email: this.email,
+        id: this.id,
+        exp: parseInt(expirationDate.getTime() / 1000 + '', 10),
+      },
+      process.env.JWT_SECRET || 'secret'
+    ) // Make sure to replace 'secret' with your own secret or key stored in environment variables
   }
 }

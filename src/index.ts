@@ -6,7 +6,8 @@ import { DataSource, DataSourceOptions } from 'typeorm'
 import { Post } from './entity/Post'
 import { User } from './entity/User'
 import { initialize } from './passport-config'
-import router from './routes'
+import postRoutes from './postRoutes'
+import userRoutes from './userRoutes'
 
 // database configuration
 const dbOptions: DataSourceOptions = {
@@ -23,21 +24,12 @@ const dbOptions: DataSourceOptions = {
 
 export const appDataSource = new DataSource(dbOptions)
 
-appDataSource
-  .initialize()
-  .then(() => {
-    console.log('Database connection established')
-  })
-  .catch((err) => {
-    console.error('Failed to connect to database:', err)
-    process.exit(1)
-  })
-
 const app = express()
-const port = 3000
+const port = process.env.PORT || 3000
 
 app.locals.userRepository = appDataSource.getRepository(User)
 app.locals.postRepository = appDataSource.getRepository(Post)
+app.locals.commentRepository = appDataSource.getRepository(Comment)
 
 // Initialize session
 app.use(
@@ -52,23 +44,9 @@ app.use(
 app.use(passport.initialize())
 app.use(passport.session())
 
-// Initialize Passport configuration
-initialize(
-  passport,
-  async (email) => {
-    console.log(`Finding user with email: ${email}`)
-    const users = await app.locals.userRepository.find()
-    return users.find((user: User) => user.email === email)
-  },
-  async (id) => {
-    console.log(`Finding user with id: ${id}`)
-    const users = await app.locals.userRepository.find()
-    return users.find((user: User) => user.id === id)
-  }
-)
-
 app.use(express.json())
-app.use('/', router)
+app.use('/users', userRoutes)
+app.use('/posts', postRoutes)
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack)
@@ -79,13 +57,32 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 })
 
 const main = async () => {
-  await appDataSource.initialize()
-  app.listen(port, () => {
-    console.log(`App running on http://localhost:${port}`)
-  })
+  try {
+    await appDataSource.initialize()
+    console.log('Database connection established')
+
+    // Initialize Passport configuration
+    initialize(
+      passport,
+      async (email) => {
+        console.log(`Finding user with email: ${email}`)
+        const users = await app.locals.userRepository.find()
+        return users.find((user: User) => user.email === email)
+      },
+      async (id) => {
+        console.log(`Finding user with id: ${id}`)
+        const users = await app.locals.userRepository.find()
+        return users.find((user: User) => user.id === id)
+      }
+    )
+
+    app.listen(port, () => {
+      console.log(`App running on http://localhost:${port}`)
+    })
+  } catch (err) {
+    console.error('Failed to connect to database:', err)
+    process.exit(1)
+  }
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+main()
