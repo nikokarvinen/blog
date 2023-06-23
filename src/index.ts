@@ -3,6 +3,7 @@ import express, { NextFunction, Request, Response } from 'express'
 import session from 'express-session'
 import passport from 'passport'
 import { DataSource, DataSourceOptions } from 'typeorm'
+import { Comment } from './entity/Comment'
 import { Post } from './entity/Post'
 import { User } from './entity/User'
 import { initialize } from './passport-config'
@@ -39,6 +40,12 @@ app.use(
     saveUninitialized: false,
   })
 )
+
+app.use((req, res, next) => {
+  req.postRepository = req.app.locals.postRepository
+  req.userRepository = req.app.locals.userRepository
+  next()
+})
 
 // Initialize Passport
 app.use(passport.initialize())

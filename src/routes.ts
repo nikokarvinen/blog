@@ -1,16 +1,18 @@
 import express, { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import { Repository } from 'typeorm'
+import { Comment } from './entity/Comment'
+import { Post } from './entity/Post'
 import { User } from './entity/User'
 
 declare module 'express-serve-static-core' {
   interface Request {
     userRepository?: Repository<User>
+    postRepository?: Repository<Post>
+    commentRepository?: Repository<Comment>
     user?: User
   }
 }
-
-const router = express.Router()
 
 // Middleware to attach repositories to request object
 export const attachRepositories = (
