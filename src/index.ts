@@ -1,6 +1,8 @@
+import cors from 'cors'
 import 'dotenv/config'
 import express, { NextFunction, Request, Response } from 'express'
 import session from 'express-session'
+import helmet from 'helmet'
 import passport from 'passport'
 import { DataSource, DataSourceOptions } from 'typeorm'
 import { Comment } from './entity/Comment'
@@ -31,6 +33,14 @@ const port = process.env.PORT || 3000
 app.locals.userRepository = appDataSource.getRepository(User)
 app.locals.postRepository = appDataSource.getRepository(Post)
 app.locals.commentRepository = appDataSource.getRepository(Comment)
+
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+  })
+)
+
+app.use(helmet())
 
 // Initialize session
 app.use(
