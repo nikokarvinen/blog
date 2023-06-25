@@ -17,7 +17,7 @@ export class User {
   @Column({ nullable: true })
   age!: number
 
-  @Column({ unique: true }) // Add unique constraint to prevent duplicate emails
+  @Column({ unique: true, length: 100 })
   email!: string
 
   @Column()

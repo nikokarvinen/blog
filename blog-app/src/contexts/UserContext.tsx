@@ -32,6 +32,9 @@ const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     const user = await loginUser(email, password)
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user))
+    }
     setUser(user)
     return user
   }
@@ -43,13 +46,16 @@ const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     lastName: string
   ) => {
     const user = await registerUser(email, password, firstName, lastName)
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user))
+    }
     setUser(user)
     return user
   }
 
   const logout = () => {
+    localStorage.removeItem('user')
     setUser(null)
-    // Remove the token from storage
   }
 
   return (

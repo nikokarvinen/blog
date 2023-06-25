@@ -14,6 +14,16 @@ router.post('/', authenticateToken, async (req, res) => {
   res.send(results)
 })
 
+// READ all posts
+router.get('/', async (req, res) => {
+  if (!req.app.locals.postRepository) {
+    return res.status(500).json({ error: 'postRepository not initialized' })
+  }
+
+  const posts = await req.app.locals.postRepository.find()
+  res.json(posts)
+})
+
 // READ a single post by ID
 router.get('/:id', async (req, res) => {
   if (!req.app.locals.postRepository) {

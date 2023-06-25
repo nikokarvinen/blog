@@ -66,6 +66,12 @@ router.post('/login', async (req: Request, res: Response) => {
   }
 })
 
+// Logout
+router.post('/logout', (req, res) => {
+  res.clearCookie('token')
+  res.sendStatus(200)
+})
+
 // READ all users
 router.get('/', async (req, res) => {
   if (!req.userRepository) {

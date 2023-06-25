@@ -1,22 +1,17 @@
 import { useEffect, useState } from 'react'
 import { getAllComments } from '../services/comments'
-import { getAllPosts } from '../services/posts'
+import { Post as PostData, getAllPosts } from '../services/posts'
 import Comments from './Comments'
-
-interface Post {
-  id: number
-  title: string
-  content: string
-}
 
 interface Comment {
   id: number
   content: string
   postId: number
+  author: string
 }
 
 const Post = () => {
-  const [posts, setPosts] = useState<Post[]>([])
+  const [posts, setPosts] = useState<PostData[]>([])
   const [comments, setComments] = useState<Comment[]>([])
 
   useEffect(() => {

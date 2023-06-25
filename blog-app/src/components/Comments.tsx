@@ -3,19 +3,18 @@ import {
   NewComment,
   createComment,
   deleteComment,
-  getAllComments,
   updateComment,
 } from '../services/comments'
 
 interface CommentProps {
-  postId: number // assuming the postId is passed as a prop
+  comments: CommentState[]
 }
 
 interface CommentState extends NewComment {
   id: number
 }
 
-const Comments: React.FC<CommentProps> = ({ postId }) => {
+const Comments: React.FC<CommentProps> = ({ comments: commentProps }) => {
   const [comments, setComments] = useState<CommentState[]>([])
   const [newCommentContent, setNewCommentContent] = useState<string>('')
   const [updatedCommentContent, setUpdatedCommentContent] = useState<{
@@ -23,18 +22,13 @@ const Comments: React.FC<CommentProps> = ({ postId }) => {
   }>({})
 
   useEffect(() => {
-    const fetchComments = async () => {
-      const fetchedComments = await getAllComments()
-      setComments(fetchedComments)
-    }
-
-    fetchComments()
-  }, [postId])
+    setComments(commentProps)
+  }, [commentProps])
 
   const handleNewCommentSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     const commentData: NewComment = {
-      postId,
+      postId: comments[0]?.postId, // Assuming all comments have the same postId
       content: newCommentContent,
       author: 'Some Author', // Change this according to your actual data
     }
@@ -44,7 +38,7 @@ const Comments: React.FC<CommentProps> = ({ postId }) => {
 
   const handleCommentUpdate = async (id: number) => {
     const updatedCommentData: NewComment = {
-      postId,
+      postId: comments[0]?.postId, // Assuming all comments have the same postId
       content: updatedCommentContent[id] || '',
       author: 'Some Author', // Change this according to your actual data
     }

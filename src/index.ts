@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import 'dotenv/config'
 import express, { NextFunction, Request, Response } from 'express'
@@ -5,12 +6,18 @@ import session from 'express-session'
 import helmet from 'helmet'
 import passport from 'passport'
 import { DataSource, DataSourceOptions } from 'typeorm'
+import commentRoutes from './commentRoute'
 import { Comment } from './entity/Comment'
 import { Post } from './entity/Post'
 import { User } from './entity/User'
 import { initialize } from './passport-config'
 import postRoutes from './postRoutes'
 import userRoutes from './userRoutes'
+
+if (!process.env.JWT_SECRET) {
+  console.error('Missing environment variable JWT_SECRET')
+  process.exit(1)
+}
 
 // database configuration
 const dbOptions: DataSourceOptions = {
@@ -41,6 +48,7 @@ app.use(
 )
 
 app.use(helmet())
+app.use(cookieParser())
 
 // Initialize session
 app.use(
@@ -52,8 +60,15 @@ app.use(
 )
 
 app.use((req, res, next) => {
-  req.postRepository = req.app.locals.postRepository
+  if (!req.app.locals.userRepository || !req.app.locals.postRepository) {
+    return res.status(500).json({
+      error: 'Required repositories not initialized',
+    })
+  }
+
   req.userRepository = req.app.locals.userRepository
+  req.postRepository = req.app.locals.postRepository
+  req.commentRepository = req.app.locals.commentRepository
   next()
 })
 
@@ -64,6 +79,7 @@ app.use(passport.session())
 app.use(express.json())
 app.use('/users', userRoutes)
 app.use('/posts', postRoutes)
+app.use('/comments', commentRoutes)
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack)

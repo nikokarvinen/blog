@@ -14,10 +14,10 @@ export class Post {
   @PrimaryGeneratedColumn()
   id!: number
 
-  @Column()
+  @Column({ length: 100 })
   title!: string
 
-  @Column()
+  @Column({ length: 500 })
   content!: string
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
