@@ -69,24 +69,35 @@ const Post = () => {
   }
 
   return (
-    <div>
-      <h1>Post</h1>
-      <div>
+    <div className="flex flex-col items-center justify-center">
+      <h1 className="text-3xl font-bold mb-4">Post</h1>
+      <div className="mb-4 w-full max-w-md">
         <input
           type="text"
           value={newPost.title}
           onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
           placeholder="Post title"
+          className="border border-gray-300 px-4 py-2 rounded-lg mb-2 w-full"
         />
         <textarea
           value={newPost.content}
           onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
           placeholder="Post content"
+          className="border border-gray-300 px-4 py-2 rounded-lg w-full"
+          rows={4}
         />
-        <button onClick={handleCreatePost}>Create Post</button>
+        <button
+          onClick={handleCreatePost}
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg mt-2 w-full"
+        >
+          Create Post
+        </button>
       </div>
       {posts.map((post) => (
-        <div key={post.id}>
+        <div
+          key={post.id}
+          className="mb-4 bg-white shadow p-4 rounded w-full max-w-md"
+        >
           {editPostId === post.id ? (
             <div>
               <input
@@ -94,34 +105,45 @@ const Post = () => {
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 placeholder="Post title"
+                className="border border-gray-300 px-4 py-2 rounded-lg mb-2 w-full"
               />
               <textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
                 placeholder="Post content"
+                className="border border-gray-300 px-4 py-2 rounded-lg w-full"
+                rows={4}
               />
-              <button onClick={() => handleUpdatePost(post.id)}>
+              <button
+                onClick={() => handleUpdatePost(post.id)}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg mt-2 w-full"
+              >
                 Update Post
               </button>
             </div>
           ) : (
             <div>
-              <h2>{post.title}</h2>
-              <p>{post.content}</p>
-              <p>
+              <h2 className="text-2xl font-semibold mb-2">{post.title}</h2>
+              <p className="text-lg">{post.content}</p>
+              <p className="mb-2">
                 Posted by: {post.user.firstName} {post.user.lastName}
-              </p>{' '}
-              {/* Display the user who created the post */}
+              </p>
               <button
                 onClick={() => {
                   setEditPostId(post.id)
                   setEditTitle(post.title)
                   setEditContent(post.content)
                 }}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg mr-2"
               >
                 Edit
               </button>
-              <button onClick={() => handleDeletePost(post.id)}>Delete</button>
+              <button
+                onClick={() => handleDeletePost(post.id)}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+              >
+                Delete
+              </button>
             </div>
           )}
           <Comments

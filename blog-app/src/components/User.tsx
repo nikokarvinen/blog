@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import { User as UserData, getAllUsers, login } from '../services/users'
+import {
+  User as UserData,
+  deleteUser,
+  getAllUsers,
+  login,
+} from '../services/users'
 
 export interface User {
   id: number
@@ -35,26 +40,50 @@ const User = () => {
     setLoggedInUser(null)
   }
 
+  const handleDeleteUser = async (userId: number) => {
+    await deleteUser(userId)
+    const updatedUsers = users.filter((user) => user.id !== userId)
+    setUsers(updatedUsers)
+  }
+
   return (
-    <div>
-      <h1>User</h1>
+    <div className="container mx-auto px-4">
+      <h1 className="text-4xl font-bold mb-4">User</h1>
       {loggedInUser ? (
-        <div>
-          <h2>
+        <div className="mb-4">
+          <h2 className="text-2xl font-semibold">
             {loggedInUser.firstName} {loggedInUser.lastName}
           </h2>
-          <p>{loggedInUser.email}</p>
-          <button onClick={handleLogout}>Logout</button>
+          <p className="text-sm">{loggedInUser.email}</p>
+          <button
+            className="mt-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+            onClick={handleLogout}
+          >
+            Logout
+          </button>
         </div>
       ) : (
-        <button onClick={handleLogin}>Login</button>
+        <button
+          className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={handleLogin}
+        >
+          Login
+        </button>
       )}
       {users.map((user) => (
-        <div key={user.id}>
-          <h2>
+        <div key={user.id} className="mb-4">
+          <h2 className="text-xl font-semibold">
             {user.firstName} {user.lastName}
           </h2>
-          <p>{user.email}</p>
+          <p className="text-sm">{user.email}</p>
+          {loggedInUser && loggedInUser.id !== user.id && (
+            <button
+              className="mt-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+              onClick={() => handleDeleteUser(user.id)}
+            >
+              Delete User
+            </button>
+          )}
         </div>
       ))}
     </div>

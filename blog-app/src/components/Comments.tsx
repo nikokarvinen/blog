@@ -28,9 +28,9 @@ const Comments: React.FC<CommentProps> = ({ comments: commentProps }) => {
   const handleNewCommentSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     const commentData: NewComment = {
-      postId: comments[0]?.postId, // Assuming all comments have the same postId
+      postId: comments[0]?.postId,
       content: newCommentContent,
-      author: 'Some Author', // Change this according to your actual data
+      author: 'Some Author',
     }
     await createComment(commentData)
     setNewCommentContent('')
@@ -38,9 +38,9 @@ const Comments: React.FC<CommentProps> = ({ comments: commentProps }) => {
 
   const handleCommentUpdate = async (id: number) => {
     const updatedCommentData: NewComment = {
-      postId: comments[0]?.postId, // Assuming all comments have the same postId
+      postId: comments[0]?.postId,
       content: updatedCommentContent[id] || '',
-      author: 'Some Author', // Change this according to your actual data
+      author: 'Some Author',
     }
     await updateComment(id, updatedCommentData)
   }
@@ -50,22 +50,31 @@ const Comments: React.FC<CommentProps> = ({ comments: commentProps }) => {
   }
 
   return (
-    <div>
-      {/* Form to create new comment */}
-      <form onSubmit={handleNewCommentSubmit}>
+    <div className="container mx-auto my-5">
+      <form
+        className="flex flex-col space-y-2"
+        onSubmit={handleNewCommentSubmit}
+      >
         <input
           type="text"
+          className="p-2 border rounded"
           value={newCommentContent}
           onChange={(e) => setNewCommentContent(e.target.value)}
+          placeholder="Write a comment..."
         />
-        <button type="submit">Add Comment</button>
+        <button
+          className="bg-blue-500 text-white py-2 px-4 rounded"
+          type="submit"
+        >
+          Add Comment
+        </button>
       </form>
-      {/* List of comments */}
       {comments.map((comment) => (
-        <div key={comment.id}>
-          <p>{comment.content}</p>
+        <div key={comment.id} className="mt-5">
+          <p className="text-gray-700">{comment.content}</p>
           <input
             type="text"
+            className="p-2 border rounded"
             value={updatedCommentContent[comment.id] || ''}
             onChange={(e) =>
               setUpdatedCommentContent({
@@ -73,13 +82,22 @@ const Comments: React.FC<CommentProps> = ({ comments: commentProps }) => {
                 [comment.id]: e.target.value,
               })
             }
+            placeholder="Edit comment..."
           />
-          <button onClick={() => handleCommentUpdate(comment.id)}>
-            Update Comment
-          </button>
-          <button onClick={() => handleCommentDelete(comment.id)}>
-            Delete Comment
-          </button>
+          <div className="flex space-x-2 mt-2">
+            <button
+              className="bg-green-500 text-white py-2 px-4 rounded"
+              onClick={() => handleCommentUpdate(comment.id)}
+            >
+              Update Comment
+            </button>
+            <button
+              className="bg-red-500 text-white py-2 px-4 rounded"
+              onClick={() => handleCommentDelete(comment.id)}
+            >
+              Delete Comment
+            </button>
+          </div>
         </div>
       ))}
     </div>

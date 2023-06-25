@@ -18,30 +18,55 @@ const Navbar = () => {
   }
 
   return (
-    <nav>
-      <ul>
+    <nav className="bg-gray-800">
+      <ul className="flex justify-between items-center px-4 py-2">
         <li>
-          <Link to="/posts">Posts</Link>
+          <Link
+            to="/posts"
+            className="text-white hover:text-gray-300 text-xl font-semibold"
+          >
+            Posts
+          </Link>
         </li>
         <li>
-          <Link to="/users">Users</Link>
+          <Link
+            to="/users"
+            className="text-white hover:text-gray-300 text-xl font-semibold"
+          >
+            Users
+          </Link>
         </li>
         {loggedInUser ? (
           <>
             <li>
-              <button onClick={handleLogout}>Logout</button>
+              <button
+                onClick={handleLogout}
+                className="text-white hover:text-gray-300 text-xl font-semibold"
+              >
+                Logout
+              </button>
             </li>
-            <li>
+            <li className="text-white">
               Welcome, {loggedInUser.firstName} {loggedInUser.lastName}
             </li>
           </>
         ) : (
           <>
             <li>
-              <Link to="/login">Login</Link>
+              <Link
+                to="/login"
+                className="text-white hover:text-gray-300 text-xl font-semibold"
+              >
+                Login
+              </Link>
             </li>
             <li>
-              <Link to="/register">Register</Link>
+              <Link
+                to="/register"
+                className="text-white hover:text-gray-300 text-xl font-semibold"
+              >
+                Register
+              </Link>
             </li>
           </>
         )}
