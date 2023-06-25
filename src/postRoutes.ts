@@ -9,7 +9,18 @@ router.post('/', authenticateToken, async (req, res) => {
     return res.status(500).json({ error: 'postRepository not initialized' })
   }
 
-  const newPost = req.app.locals.postRepository.create(req.body)
+  // Check if user is set in request by authenticateToken middleware
+  if (!req.user) {
+    return res.status(403).json({ error: 'User not authenticated' })
+  }
+
+  // Add user to the post data
+  const postData = {
+    ...req.body,
+    user: req.user,
+  }
+
+  const newPost = req.app.locals.postRepository.create(postData)
   const results = await req.app.locals.postRepository.save(newPost)
   res.send(results)
 })
@@ -20,7 +31,9 @@ router.get('/', async (req, res) => {
     return res.status(500).json({ error: 'postRepository not initialized' })
   }
 
-  const posts = await req.app.locals.postRepository.find()
+  const posts = await req.app.locals.postRepository.find({
+    relations: ['user'],
+  })
   res.json(posts)
 })
 
@@ -74,7 +87,7 @@ router.delete('/:id', async (req, res) => {
 })
 
 // READ all posts by a particular user
-router.get('/:userId/posts', async (req, res) => {
+router.get('/user/:userId/posts', async (req, res) => {
   if (!req.app.locals.postRepository) {
     return res.status(500).json({ error: 'postRepository not initialized' })
   }

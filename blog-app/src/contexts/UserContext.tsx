@@ -1,13 +1,9 @@
 import React, { createContext, useState } from 'react'
-import { login as loginUser, register as registerUser } from '../services/users'
-
-interface User {
-  id: number
-  email: string
-  firstName: string
-  lastName: string
-  token: string
-}
+import {
+  User,
+  login as loginUser,
+  register as registerUser,
+} from '../services/users'
 
 interface UserContext {
   user: User | null
@@ -30,7 +26,10 @@ const UserContext = createContext<UserContext>({} as UserContext)
 const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
 
-  const login = async (email: string, password: string) => {
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<User | null> => {
     const user = await loginUser(email, password)
     if (user) {
       localStorage.setItem('user', JSON.stringify(user))

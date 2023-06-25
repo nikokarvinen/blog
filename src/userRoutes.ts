@@ -1,7 +1,12 @@
 import bcrypt from 'bcrypt'
+import dotenv from 'dotenv'
 import express, { Request, Response } from 'express'
+import jwt from 'jsonwebtoken'
+import { authenticateToken } from './routes'
+dotenv.config()
 
 const router = express.Router()
+const secure = process.env.NODE_ENV !== 'development'
 
 // Register
 router.post('/register', async (req, res) => {
@@ -9,19 +14,34 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' })
   }
 
-  if (!req.userRepository) {
+  if (!req.app.locals.userRepository) {
     return res.status(500).json({ error: 'userRepository not initialized' })
   }
 
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 10)
-    const user = req.userRepository.create({
+    const user = req.app.locals.userRepository.create({
       ...req.body,
       password: hashedPassword,
     })
 
-    const results = await req.userRepository.save(user)
-    res.send(results)
+    const result = await req.app.locals.userRepository.save(user)
+
+    if (!result) {
+      throw new Error('User creation failed')
+    }
+
+    const accessToken = jwt.sign(
+      { id: result.id },
+      process.env.JWT_SECRET || 'secret'
+    )
+
+    res.cookie('token', accessToken, {
+      httpOnly: true,
+      sameSite: 'none',
+      secure,
+    }) // store token in httpOnly cookie
+    res.send(result)
   } catch (error) {
     const err = error as any
     if (err.code === '23505') {
@@ -36,41 +56,37 @@ router.post('/register', async (req, res) => {
 })
 
 // Login
-router.post('/login', async (req: Request, res: Response) => {
-  if (!req.body.email || !req.body.password) {
-    return res.status(400).json({ error: 'Email and password are required' })
-  }
-
-  if (!req.userRepository) {
-    return res.status(500).json({ error: 'userRepository not initialized' })
-  }
-
-  try {
-    const user = await req.userRepository.findOne({
-      where: { email: req.body.email },
+router.post(
+  '/login',
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    const { email, password } = req.body
+    const user = await req.app.locals.userRepository?.findOne({
+      where: { email },
     })
 
-    if (!user) {
-      return res.status(400).json({ error: 'User not found' })
+    if (user && (await bcrypt.compare(password, user.password))) {
+      const accessToken = jwt.sign(
+        { id: user.id },
+        process.env.JWT_SECRET || 'secret'
+      )
+      res.cookie('token', accessToken, {
+        httpOnly: true,
+        sameSite: 'none',
+        secure,
+      }) // store token in httpOnly cookie
+      return res.json(user)
+    } else {
+      return res.status(400).json({ error: 'Email or password is incorrect' })
     }
-
-    const isValid = await bcrypt.compare(req.body.password, user.password)
-
-    if (!isValid) {
-      return res.status(400).json({ error: 'Incorrect password' })
-    }
-
-    return res.json({ user: user.toAuthJSON() })
-  } catch (err) {
-    return res.status(500).json({ error: 'An error occurred while logging in' })
   }
-})
+)
 
 // Logout
-router.post('/logout', (req, res) => {
-  res.clearCookie('token')
-  res.sendStatus(200)
-})
+export const logout = (req: Request, res: Response) => {
+  res.clearCookie('token') // remove the token cookie
+  return res.sendStatus(204)
+}
 
 // READ all users
 router.get('/', async (req, res) => {

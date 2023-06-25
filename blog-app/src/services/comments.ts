@@ -1,5 +1,7 @@
 import axios from 'axios'
 
+axios.defaults.withCredentials = true
+
 const BASE_URL = import.meta.env.VITE_APP_BASE_URL
 
 export interface Comment {

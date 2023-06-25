@@ -46,12 +46,14 @@ export const authenticateToken = (
         })
       }
 
-      req.userRepository.findOne(user.id).then((fullUser) => {
-        if (!fullUser) return res.sendStatus(403)
+      req.userRepository
+        .findOne({ where: { id: user.id } })
+        .then((fullUser) => {
+          if (!fullUser) return res.sendStatus(403)
 
-        req.user = fullUser
-        next()
-      })
+          req.user = fullUser
+          next()
+        })
     }
   )
 }

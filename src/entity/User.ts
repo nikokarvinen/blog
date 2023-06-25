@@ -9,13 +9,13 @@ export class User {
   id!: number
 
   @Column({ nullable: true })
-  firstName!: string
+  firstName?: string
 
   @Column({ nullable: true })
-  lastName!: string
+  lastName?: string
 
   @Column({ nullable: true })
-  age!: number
+  age?: number
 
   @Column({ unique: true, length: 100 })
   email!: string
@@ -51,7 +51,7 @@ export class User {
         id: this.id,
         exp: parseInt(expirationDate.getTime() / 1000 + '', 10),
       },
-      process.env.JWT_SECRET || 'secret'
+      process.env.JWT_SECRET as string
     ) // Make sure to replace 'secret' with your own secret or key stored in environment variables
   }
 }

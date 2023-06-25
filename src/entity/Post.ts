@@ -23,7 +23,7 @@ export class Post {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   date!: Date
 
-  @Column('simple-array')
+  @Column('simple-array', { nullable: true })
   tags!: string[]
 
   @ManyToOne(() => User, (user) => user.posts)

@@ -44,6 +44,7 @@ app.locals.commentRepository = appDataSource.getRepository(Comment)
 app.use(
   cors({
     origin: 'http://localhost:5173',
+    credentials: true,
   })
 )
 
