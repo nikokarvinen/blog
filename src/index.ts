@@ -50,6 +50,7 @@ app.use(
 
 app.use(helmet())
 app.use(cookieParser())
+app.use(express.json())
 
 // Initialize session
 app.use(

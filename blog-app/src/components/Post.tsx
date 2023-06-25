@@ -27,13 +27,21 @@ const Post = () => {
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const data = await getAllPosts()
-      setPosts(data)
+      try {
+        const data = await getAllPosts()
+        setPosts(data)
+      } catch (error) {
+        console.error('Error fetching posts:', error)
+      }
     }
 
     const fetchComments = async () => {
-      const data = await getAllComments()
-      setComments(data)
+      try {
+        const data = await getAllComments()
+        setComments(data)
+      } catch (error) {
+        console.error('Error fetching comments:', error)
+      }
     }
 
     fetchPosts()
@@ -45,9 +53,13 @@ const Post = () => {
       return
     }
 
-    const createdPost = await createPost(newPost)
-    setPosts([createdPost, ...posts])
-    setNewPost({ title: '', content: '' })
+    try {
+      const createdPost = await createPost(newPost)
+      setPosts([createdPost, ...posts])
+      setNewPost({ title: '', content: '' })
+    } catch (error) {
+      console.error('Error creating post:', error)
+    }
   }
 
   const handleUpdatePost = async (id: number) => {
@@ -56,16 +68,24 @@ const Post = () => {
       content: editContent,
     }
 
-    const updated = await updatePost(id, updatedPost)
-    setPosts(posts.map((post) => (post.id === id ? updated : post)))
-    setEditPostId(null)
-    setEditTitle('')
-    setEditContent('')
+    try {
+      const updated = await updatePost(id, updatedPost)
+      setPosts(posts.map((post) => (post.id === id ? updated : post)))
+      setEditPostId(null)
+      setEditTitle('')
+      setEditContent('')
+    } catch (error) {
+      console.error('Error updating post:', error)
+    }
   }
 
   const handleDeletePost = async (id: number) => {
-    await deletePost(id)
-    setPosts(posts.filter((post) => post.id !== id))
+    try {
+      await deletePost(id)
+      setPosts(posts.filter((post) => post.id !== id))
+    } catch (error) {
+      console.error('Error deleting post:', error)
+    }
   }
 
   return (
@@ -147,6 +167,7 @@ const Post = () => {
             </div>
           )}
           <Comments
+            postId={post.id}
             comments={comments.filter((comment) => comment.postId === post.id)}
           />
         </div>

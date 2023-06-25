@@ -7,6 +7,7 @@ import {
 } from '../services/comments'
 
 interface CommentProps {
+  postId: number
   comments: CommentState[]
 }
 
@@ -14,7 +15,10 @@ interface CommentState extends NewComment {
   id: number
 }
 
-const Comments: React.FC<CommentProps> = ({ comments: commentProps }) => {
+const Comments: React.FC<CommentProps> = ({
+  postId,
+  comments: commentProps,
+}) => {
   const [comments, setComments] = useState<CommentState[]>([])
   const [newCommentContent, setNewCommentContent] = useState<string>('')
   const [updatedCommentContent, setUpdatedCommentContent] = useState<{
@@ -27,18 +31,32 @@ const Comments: React.FC<CommentProps> = ({ comments: commentProps }) => {
 
   const handleNewCommentSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
+
+    const user = JSON.parse(localStorage.getItem('user')) // get the user information
+    const userId = user ? user.id : null // get the user ID, or null if not found
+
     const commentData: NewComment = {
-      postId: comments[0]?.postId,
+      postId,
       content: newCommentContent,
-      author: 'Some Author',
+      userId,
     }
-    await createComment(commentData)
-    setNewCommentContent('')
+
+    if (!postId) {
+      console.error('Invalid postId')
+      return
+    }
+
+    try {
+      await createComment(commentData)
+      setNewCommentContent('')
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const handleCommentUpdate = async (id: number) => {
     const updatedCommentData: NewComment = {
-      postId: comments[0]?.postId,
+      postId,
       content: updatedCommentContent[id] || '',
       author: 'Some Author',
     }

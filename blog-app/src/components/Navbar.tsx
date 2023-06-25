@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { User } from './User'
 
+axios.defaults.withCredentials = true
+
 const Navbar = () => {
   const [loggedInUser, setLoggedInUser] = useState<User | null>(null)
 

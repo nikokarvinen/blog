@@ -7,6 +7,7 @@ const router = express.Router()
 
 // CREATE a new comment
 router.post('/', authenticateToken, async (req, res) => {
+  console.log(req.body)
   if (
     !req.app.locals.commentRepository ||
     !req.app.locals.userRepository ||
@@ -15,13 +16,17 @@ router.post('/', authenticateToken, async (req, res) => {
     return res.status(500).json({ error: 'Repository not initialized' })
   }
 
-  const user: User = await req.app.locals.userRepository.findOne(
-    req.body.userId
-  )
-  const post: Post = await req.app.locals.postRepository.findOne(
-    req.body.postId
-  )
+  const user: User | undefined = await req.app.locals.userRepository.findOne({
+    where: { id: req.body.userId },
+    relations: ['comments'],
+  })
 
+  const post: Post | undefined = await req.app.locals.postRepository.findOne({
+    where: { id: req.body.postId },
+    relations: ['comments'],
+  })
+
+  // Check if user and post were found
   if (!user || !post) {
     return res.status(400).json({ error: 'User or Post not found' })
   }
