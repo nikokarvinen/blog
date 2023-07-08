@@ -1,19 +1,19 @@
 // Comment.ts
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
-import { Post } from './Post'
-import { User } from './User'
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Post } from "./Post";
+import { User } from "./User";
 
 @Entity()
 export class Comment {
   @PrimaryGeneratedColumn()
-  id!: number
+  id!: number;
 
-  @Column('text')
-  content!: string
+  @Column("text")
+  content!: string;
 
   @ManyToOne((type) => User, (user) => user.comments)
-  user!: User
+  user!: User;
 
   @ManyToOne((type) => Post, (post) => post.comments)
-  post!: Post
+  post!: Post;
 }

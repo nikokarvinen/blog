@@ -12,6 +12,6 @@
     "typeRoots": ["./node_modules/@types", "./"],
     "types": ["node", "express"]
   },
-  "include": ["types.d.ts", "src/**/*.ts"],
+  "include": ["types.d.ts", "src/**/*.ts", "migration.ts", "migration.ts"],
   "exclude": ["node_modules", "**/*.spec.ts"]
 }

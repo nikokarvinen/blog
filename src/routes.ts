@@ -1,59 +1,67 @@
-import express, { NextFunction, Request, Response } from 'express'
-import jwt from 'jsonwebtoken'
-import { Repository } from 'typeorm'
-import { Comment } from './entity/Comment'
-import { Post } from './entity/Post'
-import { User } from './entity/User'
+import { Post, PrismaClient, User } from "@prisma/client";
+import express, { NextFunction, Request, Response } from "express";
+import jwt from "jsonwebtoken";
 
-declare module 'express-serve-static-core' {
+// Initialize prisma client
+const prisma = new PrismaClient();
+
+// Extend the Express Request interface to include our custom properties
+declare module "express-serve-static-core" {
   interface Request {
-    userRepository?: Repository<User>
-    postRepository?: Repository<Post>
-    commentRepository?: Repository<Comment>
-    user?: User
+    userRepository?: PrismaClient["user"];
+    postRepository?: PrismaClient["post"];
+    user?: User;
   }
 }
 
-// Middleware to attach repositories to request object
+// Middleware to attach repositories to the request object
 export const attachRepositories = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
-  req.userRepository = req.app.locals.userRepository
-  req.postRepository = req.app.locals.postRepository
-  next()
-}
+  req.userRepository = prisma.user;
+  req.postRepository = prisma.post;
+  next();
+};
 
+// Middleware to authenticate the JWT token
 export const authenticateToken = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
-  const token = req.cookies.token
+  const token = req.cookies.token;
 
-  if (token == null) return res.sendStatus(401)
+  if (token == null) return res.sendStatus(401);
 
+  // Verify the JWT
   jwt.verify(
     token,
-    process.env.JWT_SECRET || 'secret',
-    (err: any, user: any) => {
-      if (err) return res.sendStatus(403)
+    process.env.JWT_SECRET || "secret",
+    async (err: any, user: any) => {
+      if (err) return res.sendStatus(403);
 
-      if (!req.userRepository || !user) {
+      if (!user) {
         return res.status(500).json({
-          error: 'userRepository not initialized or user in JWT is not defined',
-        })
+          error: "User in JWT is not defined",
+        });
       }
 
-      req.userRepository
-        .findOne({ where: { id: user.id } })
-        .then((fullUser) => {
-          if (!fullUser) return res.sendStatus(403)
+      try {
+        // Fetch the full user data using the user id from JWT
+        const fullUser = await prisma.user.findUnique({
+          where: { id: user.id },
+        });
 
-          req.user = fullUser
-          next()
-        })
-    }
-  )
-}
+        if (!fullUser) return res.sendStatus(403);
+
+        req.user = fullUser;
+        next();
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        res.sendStatus(500);
+      }
+    },
+  );
+};

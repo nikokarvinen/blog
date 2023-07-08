@@ -1,10 +1,13 @@
+import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
 import express, { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import { authenticateToken } from './routes'
+
 dotenv.config()
 
+const prisma = new PrismaClient()
 const router = express.Router()
 const secure = process.env.NODE_ENV !== 'development'
 
@@ -14,25 +17,17 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' })
   }
 
-  if (!req.app.locals.userRepository) {
-    return res.status(500).json({ error: 'userRepository not initialized' })
-  }
-
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 10)
-    const user = req.app.locals.userRepository.create({
-      ...req.body,
-      password: hashedPassword,
+    const user = await prisma.user.create({
+      data: {
+        ...req.body,
+        password: hashedPassword,
+      },
     })
 
-    const result = await req.app.locals.userRepository.save(user)
-
-    if (!result) {
-      throw new Error('User creation failed')
-    }
-
     const accessToken = jwt.sign(
-      { id: result.id },
+      { id: user.id },
       process.env.JWT_SECRET || 'secret'
     )
 
@@ -41,12 +36,11 @@ router.post('/register', async (req, res) => {
       sameSite: 'none',
       secure,
     }) // store token in httpOnly cookie
-    res.send(result)
+    res.send(user)
   } catch (error) {
     const err = error as any
-    if (err.code === '23505') {
-      // '23505' is the error code for unique_violation in PostgreSQL
-      res.status(409).json({ error: 'An user with this email already exists.' })
+    if (err.code === 'P2002') {
+      res.status(409).json({ error: 'A user with this email already exists.' })
     } else {
       res
         .status(500)
@@ -61,61 +55,62 @@ router.post(
   authenticateToken,
   async (req: Request, res: Response) => {
     const { email, password } = req.body
-    const user = await req.app.locals.userRepository?.findOne({
-      where: { email },
-    })
 
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const accessToken = jwt.sign(
-        { id: user.id },
-        process.env.JWT_SECRET || 'secret'
-      )
-      res.cookie('token', accessToken, {
-        httpOnly: true,
-        sameSite: 'none',
-        secure,
-      }) // store token in httpOnly cookie
-      return res.json(user)
-    } else {
-      return res.status(400).json({ error: 'Email or password is incorrect' })
+    try {
+      const user = await prisma.user.findUnique({ where: { email } })
+
+      if (user && (await bcrypt.compare(password, user.password))) {
+        const accessToken = jwt.sign(
+          { id: user.id },
+          process.env.JWT_SECRET || 'secret'
+        )
+
+        res.cookie('token', accessToken, {
+          httpOnly: true,
+          sameSite: 'none',
+          secure,
+        }) // store token in httpOnly cookie
+        return res.json(user)
+      } else {
+        return res.status(400).json({ error: 'Email or password is incorrect' })
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error)
+      res.sendStatus(500)
     }
   }
 )
 
 // Logout
-export const logout = (req: Request, res: Response) => {
-  res.clearCookie('token') // remove the token cookie
-  return res.sendStatus(204)
-}
+router.post('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Failed to destroy session:', err)
+      res.status(500).json({ error: 'Failed to log out' })
+    } else {
+      res.clearCookie('session_id') // Clear the session cookie
+      res.sendStatus(200)
+    }
+  })
+})
 
 // READ all users
 router.get('/', async (req, res) => {
-  if (!req.userRepository) {
-    return res.status(500).json({ error: 'userRepository not initialized' })
-  }
-
-  const users = await req.userRepository.find()
+  const users = await prisma.user.findMany()
   res.json(users)
 })
 
 // CREATE a new user
 router.post('/', async (req, res) => {
-  if (!req.userRepository) {
-    return res.status(500).json({ error: 'userRepository not initialized' })
-  }
-
-  const newUser = req.userRepository.create(req.body)
-  const results = await req.userRepository.save(newUser)
-  res.send(results)
+  const newUser = await prisma.user.create({
+    data: req.body,
+  })
+  res.send(newUser)
 })
 
 // READ a single user by ID
 router.get('/:id', async (req, res) => {
-  if (!req.userRepository) {
-    return res.status(500).json({ error: 'userRepository not initialized' })
-  }
-
-  const user = await req.userRepository.findOne({
+  const user = await prisma.user.findUnique({
     where: { id: Number(req.params.id) },
   })
 
@@ -127,33 +122,63 @@ router.get('/:id', async (req, res) => {
 })
 
 // UPDATE a user
-router.put('/:id', async function (req: Request, res: Response) {
-  if (!req.userRepository) {
-    return res.status(500).json({ error: 'userRepository not initialized' })
+router.put('/:id', async (req: Request, res: Response) => {
+  const userId = Number(req.params.id)
+  const { firstName, lastName, email, password } = req.body as {
+    firstName: string
+    lastName: string
+    email: string
+    password?: string // Make the password field optional
   }
 
-  const user = await req.userRepository.findOne({
-    where: { id: Number(req.params.id) },
-  })
+  try {
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+    })
 
-  if (!user) {
-    res.status(404).send('User not found')
-    return
+    if (!existingUser) {
+      return res.status(404).send('User not found')
+    }
+
+    let updatedUserData: {
+      firstName: string
+      lastName: string
+      email: string
+      password?: string // Update the type annotation to include the optional password field
+    } = {
+      firstName,
+      lastName,
+      email,
+    }
+
+    // Check if the password field is included in the request payload
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10)
+      updatedUserData = {
+        ...updatedUserData,
+        password: hashedPassword,
+      }
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updatedUserData,
+    })
+
+    res.send(updatedUser)
+  } catch (error) {
+    console.error('Failed to update user:', error)
+    res.sendStatus(500)
   }
-
-  req.userRepository.merge(user, req.body)
-  const results = await req.userRepository.save(user)
-  res.send(results)
 })
 
 // DELETE a user
 router.delete('/:id', async (req, res) => {
-  if (!req.userRepository) {
-    return res.status(500).json({ error: 'userRepository not initialized' })
-  }
+  await prisma.user.delete({
+    where: { id: Number(req.params.id) },
+  })
 
-  const result = await req.userRepository.delete(Number(req.params.id))
-  res.send(result)
+  res.sendStatus(204)
 })
 
 export default router

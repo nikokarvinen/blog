@@ -1,50 +1,50 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 import {
   User as UserData,
   deleteUser,
   getAllUsers,
   login,
-} from '../services/users'
+} from "../services/users";
 
 export interface User {
-  id: number
-  firstName: string
-  lastName: string
-  email: string
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
 }
 
 const User = () => {
-  const [users, setUsers] = useState<UserData[]>([])
-  const [loggedInUser, setLoggedInUser] = useState<UserData | null>(null)
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const data = await getAllUsers()
-      setUsers(data)
-    }
+      const data = await getAllUsers();
+      setUsers(data);
+    };
 
-    fetchUsers()
-  }, [])
+    fetchUsers();
+  }, []);
 
   const handleLogin = async () => {
-    const email = prompt('Enter email')
-    const password = prompt('Enter password')
+    const email = prompt("Enter email");
+    const password = prompt("Enter password");
 
     if (email && password) {
-      const user = await login(email, password)
-      setLoggedInUser(user)
+      const user = await login(email, password);
+      setLoggedInUser(user);
     }
-  }
+  };
 
   const handleLogout = () => {
-    setLoggedInUser(null)
-  }
+    setLoggedInUser(null);
+  };
 
   const handleDeleteUser = async (userId: number) => {
-    await deleteUser(userId)
-    const updatedUsers = users.filter((user) => user.id !== userId)
-    setUsers(updatedUsers)
-  }
+    await deleteUser(userId);
+    const updatedUsers = users.filter((user) => user.id !== userId);
+    setUsers(updatedUsers);
+  };
 
   return (
     <div className="container mx-auto px-4">
@@ -87,7 +87,7 @@ const User = () => {
         </div>
       ))}
     </div>
-  )
-}
+  );
+};
 
-export default User
+export default User;

@@ -1,27 +1,35 @@
-import React, { useContext, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { UserContext } from '../contexts/UserContext'
+import React, { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { UserContext } from "../contexts/UserContext";
 
 const Login = () => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const { login } = useContext(UserContext)
-  const navigate = useNavigate()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null); // Keep error state
+  const { login } = useContext(UserContext);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const user = await login(email, password)
-    if (user) {
-      navigate('/')
-    } else {
-      // Show error message
+    e.preventDefault();
+    try {
+      const user = await login(email, password);
+      if (user) {
+        navigate("/");
+      } else {
+        setError("Invalid email or password");
+      }
+    } catch (error) {
+      setError("An error occurred");
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="bg-gray-50 min-h-screen justify-center flex items-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="text-red-500 text-center mb-4">{error}</div>
+          )}
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email-address" className="sr-only">
@@ -63,7 +71,7 @@ const Login = () => {
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

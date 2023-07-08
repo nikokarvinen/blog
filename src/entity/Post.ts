@@ -6,34 +6,34 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-} from 'typeorm'
-import { Comment } from './Comment'
-import { User } from './User'
+} from "typeorm";
+import { Comment } from "./Comment";
+import { User } from "./User";
 
-@Entity('post')
+@Entity("post")
 export class Post {
   @PrimaryGeneratedColumn()
-  id!: number
+  id!: number;
 
   @Column({ length: 100 })
-  title!: string
+  title!: string;
 
   @Column({ length: 500 })
-  content!: string
+  content!: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  date!: Date
+  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  date!: Date;
 
-  @Column('simple-array', { nullable: true })
-  tags!: string[]
+  @Column("simple-array", { nullable: true })
+  tags!: string[];
 
   @ManyToOne(() => User, (user) => user.posts)
-  @JoinColumn({ name: 'user_id' })
-  user!: User
+  @JoinColumn({ name: "user_id" })
+  user!: User;
 
   @OneToMany(() => Comment, (comment) => comment.post, {
     cascade: true,
-    onDelete: 'CASCADE',
+    onDelete: "CASCADE",
   })
-  comments!: Comment[]
+  comments!: Comment[];
 }

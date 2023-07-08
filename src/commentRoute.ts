@@ -1,102 +1,88 @@
-import express, { Request, Response } from 'express'
-import { Post } from './entity/Post'
-import { User } from './entity/User'
-import { authenticateToken } from './routes'
+import { PrismaClient } from "@prisma/client";
+import express, { Request, Response } from "express";
+import { authenticateToken } from "./routes";
 
-const router = express.Router()
+const prisma = new PrismaClient();
+
+const router = express.Router();
 
 // CREATE a new comment
-router.post('/', authenticateToken, async (req, res) => {
-  console.log(req.body)
-  if (
-    !req.app.locals.commentRepository ||
-    !req.app.locals.userRepository ||
-    !req.app.locals.postRepository
-  ) {
-    return res.status(500).json({ error: 'Repository not initialized' })
-  }
-
-  const user: User | undefined = await req.app.locals.userRepository.findOne({
-    where: { id: req.body.userId },
-    relations: ['comments'],
-  })
-
-  const post: Post | undefined = await req.app.locals.postRepository.findOne({
-    where: { id: req.body.postId },
-    relations: ['comments'],
-  })
+router.post("/", authenticateToken, async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.body.userId } });
+  const post = await prisma.post.findUnique({ where: { id: req.body.postId } });
 
   // Check if user and post were found
   if (!user || !post) {
-    return res.status(400).json({ error: 'User or Post not found' })
+    return res.status(400).json({ error: "User or Post not found" });
   }
 
-  const newComment = req.app.locals.commentRepository.create({
-    content: req.body.content,
-    user: user,
-    post: post,
-  })
+  const newComment = await prisma.comment.create({
+    data: {
+      content: req.body.content,
+      userId: user.id,
+      postId: post.id,
+    },
+  });
 
-  const results = await req.app.locals.commentRepository.save(newComment)
-  res.send(results)
-})
+  res.json(newComment);
+});
 
 // READ all comments
-router.get('/', async (req, res) => {
-  if (!req.app.locals.commentRepository) {
-    return res.status(500).json({ error: 'commentRepository not initialized' })
-  }
+router.get("/", async (_req, res) => {
+  const comments = await prisma.comment.findMany({
+    include: {
+      User: true,
+      Post: true,
+    },
+  });
 
-  const comments = await req.app.locals.commentRepository.find({
-    relations: ['user', 'post'],
-  })
-  res.json(comments)
-})
+  res.json(comments);
+});
 
 // READ a single comment by ID
-router.get('/:id', async (req, res) => {
-  if (!req.app.locals.commentRepository) {
-    return res.status(500).json({ error: 'commentRepository not initialized' })
-  }
-
-  const comment = await req.app.locals.commentRepository.findOne(
-    req.params.id,
-    { relations: ['user', 'post'] }
-  )
+router.get("/:id", async (req, res) => {
+  const comment = await prisma.comment.findUnique({
+    where: { id: parseInt(req.params.id) },
+    include: {
+      User: true,
+      Post: true,
+    },
+  });
 
   if (comment) {
-    res.send(comment)
+    res.json(comment);
   } else {
-    res.status(404).send('Comment not found')
+    res.status(404).json({ error: "Comment not found" });
   }
-})
+});
 
 // UPDATE a comment
-router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
-  if (!req.app.locals.commentRepository) {
-    return res.status(500).json({ error: 'commentRepository not initialized' })
-  }
-
-  const comment = await req.app.locals.commentRepository.findOne(req.params.id)
+router.put("/:id", authenticateToken, async (req: Request, res: Response) => {
+  const comment = await prisma.comment.findUnique({
+    where: { id: parseInt(req.params.id) },
+  });
 
   if (!comment) {
-    res.status(404).send('Comment not found')
-    return
+    return res.status(404).json({ error: "Comment not found" });
   }
 
-  comment.content = req.body.content
-  const results = await req.app.locals.commentRepository.save(comment)
-  res.send(results)
-})
+  const updatedComment = await prisma.comment.update({
+    where: { id: parseInt(req.params.id) },
+    data: {
+      content: req.body.content,
+    },
+  });
+
+  res.json(updatedComment);
+});
 
 // DELETE a comment
-router.delete('/:id', authenticateToken, async (req, res) => {
-  if (!req.app.locals.commentRepository) {
-    return res.status(500).json({ error: 'commentRepository not initialized' })
-  }
+router.delete("/:id", authenticateToken, async (req, res) => {
+  const deletedComment = await prisma.comment.delete({
+    where: { id: parseInt(req.params.id) },
+  });
 
-  const result = await req.app.locals.commentRepository.delete(req.params.id)
-  res.send(result)
-})
+  res.json(deletedComment);
+});
 
-export default router
+export default router;

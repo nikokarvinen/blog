@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { getAllComments } from '../services/comments'
 import {
   Post as PostData,
   PostInput,
@@ -10,17 +9,9 @@ import {
 } from '../services/posts'
 import Comments from './Comments'
 
-interface Comment {
-  id: number
-  content: string
-  postId: number
-  author: string
-}
-
 const Post = () => {
   const [posts, setPosts] = useState<PostData[]>([])
   const [newPost, setNewPost] = useState<PostInput>({ title: '', content: '' })
-  const [comments, setComments] = useState<Comment[]>([])
   const [editPostId, setEditPostId] = useState<null | number>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editContent, setEditContent] = useState('')
@@ -35,17 +26,7 @@ const Post = () => {
       }
     }
 
-    const fetchComments = async () => {
-      try {
-        const data = await getAllComments()
-        setComments(data)
-      } catch (error) {
-        console.error('Error fetching comments:', error)
-      }
-    }
-
     fetchPosts()
-    fetchComments()
   }, [])
 
   const handleCreatePost = async () => {
@@ -150,7 +131,6 @@ const Post = () => {
                   Posted by: {post.user.firstName} {post.user.lastName}
                 </p>
               )}
-
               <button
                 onClick={() => {
                   setEditPostId(post.id)
@@ -167,16 +147,12 @@ const Post = () => {
               >
                 Delete
               </button>
+              <Comments postId={post.id} />
             </div>
           )}
-          <Comments
-            postId={post.id}
-            comments={comments.filter((comment) => comment.postId === post.id)}
-          />
         </div>
       ))}
     </div>
   )
 }
-
 export default Post
