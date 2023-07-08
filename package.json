@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
     "build": "tsc",
-    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli -f ormconfig.json"
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli -f ormconfig.json",
+    "typeorm:migrate": "npm run typeorm -- migration:generate"
   },
   "keywords": [],
   "author": "",
@@ -25,7 +26,7 @@
     "passport-local": "^1.0.0",
     "pg": "^8.11.0",
     "reflect-metadata": "^0.1.13",
-    "typeorm": "^0.3.16"
+    "typeorm": "^0.3.17"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
@@ -38,6 +39,7 @@
     "@types/passport": "^1.0.12",
     "@types/passport-local": "^1.0.35",
     "nodemon": "^2.0.22",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0"
   }
 }

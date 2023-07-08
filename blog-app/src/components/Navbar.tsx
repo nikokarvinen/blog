@@ -8,7 +8,7 @@ axios.defaults.withCredentials = true
 const Navbar = () => {
   const [loggedInUser, setLoggedInUser] = useState<User | null>(null)
 
-  const BASE_URL = 'http://localhost:3000' // replace with your server's URL
+  const BASE_URL = 'http://localhost:3000'
 
   const handleLogout = async () => {
     try {
@@ -20,12 +20,12 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="bg-gray-800">
-      <ul className="flex justify-between items-center px-4 py-2">
+    <nav className="bg-gray-800" style={{height: '60px'}}>
+      <ul className="flex justify-between items-center px-5 py-3">
         <li>
           <Link
             to="/posts"
-            className="text-white hover:text-gray-300 text-xl font-semibold"
+            className="text-white hover:text-gray-300 text-xl font-semibold" style={{fontSize: '1.5rem'}}
           >
             Posts
           </Link>
@@ -33,7 +33,7 @@ const Navbar = () => {
         <li>
           <Link
             to="/users"
-            className="text-white hover:text-gray-300 text-xl font-semibold"
+            className="text-white hover:text-gray-300 text-xl font-semibold" style={{fontSize: '1.5rem'}}
           >
             Users
           </Link>
@@ -43,7 +43,7 @@ const Navbar = () => {
             <li>
               <button
                 onClick={handleLogout}
-                className="text-white hover:text-gray-300 text-xl font-semibold"
+                className="text-white hover:text-gray-300 text-xl font-semibold" 
               >
                 Logout
               </button>
@@ -57,7 +57,7 @@ const Navbar = () => {
             <li>
               <Link
                 to="/login"
-                className="text-white hover:text-gray-300 text-xl font-semibold"
+                className="text-white hover:text-gray-300 text-xl font-semibold" style={{fontSize: '1.5rem'}}
               >
                 Login
               </Link>
@@ -65,7 +65,7 @@ const Navbar = () => {
             <li>
               <Link
                 to="/register"
-                className="text-white hover:text-gray-300 text-xl font-semibold"
+                className="text-white hover:text-gray-300 text-xl font-semibold" style={{fontSize: '1.5rem'}}
               >
                 Register
               </Link>

@@ -1,3 +1,4 @@
+// Post.ts
 import {
   Column,
   Entity,
@@ -30,6 +31,9 @@ export class Post {
   @JoinColumn({ name: 'user_id' })
   user!: User
 
-  @OneToMany(() => Comment, (comment) => comment.post)
+  @OneToMany(() => Comment, (comment) => comment.post, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   comments!: Comment[]
 }

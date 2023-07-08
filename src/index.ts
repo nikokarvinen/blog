@@ -48,7 +48,7 @@ app.use(
   })
 )
 
-app.use(helmet())
+// app.use(helmet())
 app.use(cookieParser())
 app.use(express.json())
 

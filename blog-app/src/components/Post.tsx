@@ -90,7 +90,7 @@ const Post = () => {
 
   return (
     <div className="flex flex-col items-center justify-center">
-      <h1 className="text-3xl font-bold mb-4">Post</h1>
+      <h1 className="text-4xl font-bold mb-4 pt-6">Post</h1>
       <div className="mb-4 w-full max-w-md">
         <input
           type="text"
@@ -145,9 +145,12 @@ const Post = () => {
             <div>
               <h2 className="text-2xl font-semibold mb-2">{post.title}</h2>
               <p className="text-lg">{post.content}</p>
-              <p className="mb-2">
-                Posted by: {post.user.firstName} {post.user.lastName}
-              </p>
+              {post.user && (
+                <p className="mb-2">
+                  Posted by: {post.user.firstName} {post.user.lastName}
+                </p>
+              )}
+
               <button
                 onClick={() => {
                   setEditPostId(post.id)
