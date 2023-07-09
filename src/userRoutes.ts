@@ -13,8 +13,10 @@ const secure = process.env.NODE_ENV !== 'development'
 
 // Register
 router.post('/register', async (req, res) => {
-  if (!req.body.email || !req.body.password) {
-    return res.status(400).json({ error: 'Email and password are required' })
+  if (!req.body.username || !req.body.email || !req.body.password) {
+    return res
+      .status(400)
+      .json({ error: 'Username, email and password are required' })
   }
 
   try {
@@ -124,9 +126,8 @@ router.get('/:id', async (req, res) => {
 // UPDATE a user
 router.put('/:id', async (req: Request, res: Response) => {
   const userId = Number(req.params.id)
-  const { firstName, lastName, email, password } = req.body as {
-    firstName: string
-    lastName: string
+  const { username, email, password } = req.body as {
+    username: string
     email: string
     password?: string // Make the password field optional
   }
@@ -141,13 +142,11 @@ router.put('/:id', async (req: Request, res: Response) => {
     }
 
     let updatedUserData: {
-      firstName: string
-      lastName: string
+      username: string
       email: string
       password?: string // Update the type annotation to include the optional password field
     } = {
-      firstName,
-      lastName,
+      username,
       email,
     }
 

@@ -27,7 +27,7 @@ const Navbar = () => {
               className="text-white hover:text-gray-300 text-xl font-semibold"
               style={{ fontSize: '1.5rem' }}
             >
-              {user.firstName} {user.lastName}
+              {user.username}{' '}
             </Link>
           </li>
         ) : (

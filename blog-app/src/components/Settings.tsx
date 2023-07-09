@@ -9,16 +9,14 @@ const Settings = () => {
   const navigate = useNavigate()
   const { user, logout } = useContext(UserContext)
 
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     if (user) {
-      setFirstName(user.firstName)
-      setLastName(user.lastName)
+      setUsername(user.username)
       setEmail(user.email)
     }
   }, [user])
@@ -37,22 +35,16 @@ const Settings = () => {
     e.preventDefault()
     try {
       const updatedUser = {
-        firstName,
-        lastName,
+        username,
         email,
         password,
       }
 
-      // Make a PUT request to the server to update the user settings
       await axios.put('http://localhost:3000/users/' + user?.id, updatedUser)
-      // Show success message
       setSuccessMessage('Settings updated successfully!')
-
-      // If the password is updated, clear the password field
       setPassword('')
     } catch (err) {
       console.error('Failed to update settings', err)
-      // Show error message
       setSuccessMessage('Failed to update settings')
     }
   }
@@ -67,20 +59,11 @@ const Settings = () => {
 
       <form onSubmit={handleUpdateSettings}>
         <div className="mb-4">
-          <label className="block text-gray-700">First Name:</label>
+          <label className="block text-gray-700">Username:</label>
           <input
             type="text"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Last Name:</label>
-          <input
-            type="text"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
