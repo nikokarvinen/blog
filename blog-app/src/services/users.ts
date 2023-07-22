@@ -9,6 +9,10 @@ export interface User {
   email: string
   username: string
   token: string
+  age: number | null
+  password: string
+  createdAt: string
+  updatedAt: string
 }
 
 // Get all users

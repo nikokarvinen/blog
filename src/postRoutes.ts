@@ -31,7 +31,19 @@ router.post('/', authenticateToken, async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     // Use prisma client to get all posts from our database
-    const posts = await prisma.post.findMany({ include: { User: true } })
+    const posts = await prisma.post.findMany({
+      include: {
+        User: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+    })
     res.json(posts)
   } catch (error) {
     console.error('Error fetching posts:', error)
@@ -46,7 +58,17 @@ router.get('/:id', async (req, res) => {
     // Use prisma client to get a post from our database
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      include: { User: true },
+      include: {
+        User: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
     })
 
     if (post) {

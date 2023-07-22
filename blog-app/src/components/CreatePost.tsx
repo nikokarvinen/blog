@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Post as PostData,
   PostInput,
@@ -16,18 +16,18 @@ const Post = () => {
   const [editTitle, setEditTitle] = useState('')
   const [editContent, setEditContent] = useState('')
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const data = await getAllPosts()
-        setPosts(data)
-      } catch (error) {
-        console.error('Error fetching posts:', error)
-      }
+  const fetchPosts = useCallback(async () => {
+    try {
+      const data = await getAllPosts()
+      setPosts(data)
+    } catch (error) {
+      console.error('Error fetching posts:', error)
     }
-
-    fetchPosts()
   }, [])
+
+  useEffect(() => {
+    fetchPosts()
+  }, [fetchPosts])
 
   const handleCreatePost = async () => {
     if (!newPost.title || !newPost.content) {
@@ -95,61 +95,27 @@ const Post = () => {
         </button>
       </div>
       {posts.map((post) => (
-        <div
-          key={post.id}
-          className="mb-4 bg-white shadow p-4 rounded w-full max-w-md"
-        >
-          {editPostId === post.id ? (
+        <div key={post.id}>
+          <h2>{post.title}</h2>
+          <p>{post.content}</p>
+          <button onClick={() => handleDeletePost(post.id)}>Delete</button>
+          <button onClick={() => setEditPostId(post.id)}>Edit</button>
+          {editPostId === post.id && (
             <div>
               <input
                 type="text"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                placeholder="Post title"
-                className="border border-gray-300 px-4 py-2 rounded-lg mb-2 w-full"
               />
-              <textarea
+              <input
+                type="text"
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                placeholder="Post content"
-                className="border border-gray-300 px-4 py-2 rounded-lg w-full"
-                rows={4}
               />
-              <button
-                onClick={() => handleUpdatePost(post.id)}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg mt-2 w-full"
-              >
-                Update Post
-              </button>
-            </div>
-          ) : (
-            <div>
-              <h2 className="text-2xl font-semibold mb-2">{post.title}</h2>
-              <p className="text-lg">{post.content}</p>
-              {post.user && (
-                <p className="mb-2">
-                  Posted by: {post.user.firstName} {post.user.lastName}
-                </p>
-              )}
-              <button
-                onClick={() => {
-                  setEditPostId(post.id)
-                  setEditTitle(post.title)
-                  setEditContent(post.content)
-                }}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg mr-2"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDeletePost(post.id)}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
-              >
-                Delete
-              </button>
-              <Comments postId={post.id} />
+              <button onClick={() => handleUpdatePost(post.id)}>Save</button>
             </div>
           )}
+          <Comments post={post} onCommentAdded={fetchPosts} />
         </div>
       ))}
     </div>

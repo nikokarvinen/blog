@@ -1,19 +1,20 @@
-import { Navigate, Route, Routes } from "react-router-dom";
-import Login from "./components/Login";
-import Post from "./components/Post";
-import Register from "./components/Register";
-import Settings from "./components/Settings";
+import { Route, Routes } from 'react-router-dom'
+import CreatePost from './components/CreatePost'
+import Home from './components/Home'
+import Login from './components/Login'
+import Register from './components/Register'
+import Settings from './components/Settings'
 
 const RoutesComponent = () => {
   return (
     <Routes>
-      <Route path="/posts" element={<Post />} />
+      <Route path="/create-post" element={<CreatePost />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/settings" element={<Settings />} />
-      <Route path="/" element={<Navigate to="/posts" />} />
+      <Route path="/" element={<Home />} />
     </Routes>
-  );
-};
+  )
+}
 
-export default RoutesComponent;
+export default RoutesComponent

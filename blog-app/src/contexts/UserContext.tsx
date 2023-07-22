@@ -11,8 +11,7 @@ interface UserContext {
   register: (
     email: string,
     password: string,
-    firstName: string,
-    lastName: string,
+    username: string,
   ) => Promise<User | null>;
   logout: () => void;
 }
@@ -41,10 +40,9 @@ const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const register = async (
     email: string,
     password: string,
-    firstName: string,
-    lastName: string,
+    username: string,
   ) => {
-    const user = await registerUser(email, password, firstName, lastName);
+    const user = await registerUser(email, password, username);
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
     }

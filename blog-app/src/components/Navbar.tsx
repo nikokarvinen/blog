@@ -13,21 +13,32 @@ const Navbar = () => {
       <ul className="flex justify-between items-center px-5 py-3">
         <li>
           <Link
-            to="/posts"
+            to="/"
             className="text-white hover:text-gray-300 text-xl font-semibold"
             style={{ fontSize: '1.5rem' }}
           >
-            Posts
+            Home
           </Link>
         </li>
-        {user ? ( // Check if user exists in UserContext
+        {user && ( // Check if user exists in UserContext
+          <li>
+            <Link
+              to="/create-post"
+              className="text-white hover:text-gray-300 text-xl font-semibold"
+              style={{ fontSize: '1.5rem' }}
+            >
+              Create Post
+            </Link>
+          </li>
+        )}
+        {user ? (
           <li>
             <Link
               to="/settings"
               className="text-white hover:text-gray-300 text-xl font-semibold"
               style={{ fontSize: '1.5rem' }}
             >
-              {user.username}{' '}
+              {user.username}
             </Link>
           </li>
         ) : (

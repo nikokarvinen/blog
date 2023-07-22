@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { User } from './users'
 
 axios.defaults.withCredentials = true
 
@@ -8,13 +9,21 @@ export interface Post {
   id: number
   title: string
   content: string
-  user: User
+  createdAt: string
+  updatedAt: string
+  User?: User
+  Comments?: Comment[]
+  commentCount: number
 }
 
-export interface User {
-  username: string
-  email: string
+export interface Comment {
   id: number
+  postId: number
+  content: string
+  userId: number | null
+  createdAt: string
+  updatedAt: string
+  User: User
 }
 
 export interface PostInput {

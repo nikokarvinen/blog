@@ -1,19 +1,27 @@
+import { AxiosError } from 'axios'
 import React, { useEffect, useState } from 'react'
 import {
-  CommentState,
-  NewComment,
+  AppComment,
+  NewAppComment,
   createComment,
   deleteComment,
   getCommentsByPostId,
   updateComment,
 } from '../services/comments'
+import { Post as PostData } from '../services/posts'
 
-interface CommentProps {
-  postId: number
+interface CommentsProps {
+  post: PostData
+  onCommentAdded: () => void
+  onCommentDeleted: () => void
 }
 
-const Comments: React.FC<CommentProps> = ({ postId }) => {
-  const [comments, setComments] = useState<CommentState[]>([])
+const Comments = ({
+  post,
+  onCommentAdded,
+  onCommentDeleted,
+}: CommentsProps): JSX.Element => {
+  const [comments, setComments] = useState<AppComment[]>([])
   const [newCommentContent, setNewCommentContent] = useState<string>('')
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
   const [updatedCommentContent, setUpdatedCommentContent] = useState<{
@@ -21,17 +29,38 @@ const Comments: React.FC<CommentProps> = ({ postId }) => {
   }>({})
 
   useEffect(() => {
+    // Fetch comments when the post prop changes
     const fetchComments = async () => {
-      try {
-        const fetchedComments = await getCommentsByPostId(postId)
-        setComments(fetchedComments)
-      } catch (err) {
-        console.error(err)
+      if (post) {
+        try {
+          const postComments = await getCommentsByPostId(post.id)
+          const appComments: AppComment[] = postComments.map((comment) => ({
+            id: comment.id,
+            postId: comment.postId,
+            content: comment.content,
+            createdAt: comment.createdAt,
+            updatedAt: comment.updatedAt,
+            User: { username: comment.User.username },
+            userId: comment.userId,
+          }))
+          setComments(appComments)
+        } catch (error) {
+          const axiosError = error as AxiosError
+          if (axiosError.response && axiosError.response.status === 404) {
+            console.log('No comments for this post yet')
+          } else {
+            console.error('Error fetching comments:', error)
+          }
+        }
       }
     }
 
     fetchComments()
-  }, [postId])
+  }, [post])
+
+  if (!post) {
+    return <div>Loading...</div>
+  }
 
   const handleNewCommentSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -40,22 +69,22 @@ const Comments: React.FC<CommentProps> = ({ postId }) => {
     const user = userString ? JSON.parse(userString) : null
     const userId = user ? user.id : null
 
-    const commentData: NewComment = {
-      postId,
-      content: newCommentContent,
-      author: user ? user.name : 'Unknown',
+    const commentData: NewAppComment = {
+      postId: post.id,
+      content: newCommentContent.trim(),
       userId,
     }
 
-    if (!postId) {
-      console.error('Invalid postId')
+    if (!commentData.content) {
+      console.error('Invalid postId or empty comment content')
       return
     }
 
     try {
-      const newComment = await createComment(commentData)
+      const newComment: AppComment = await createComment(commentData)
       setComments((prevComments) => [...prevComments, newComment])
       setNewCommentContent('')
+      onCommentAdded()
     } catch (err) {
       console.error(err)
     }
@@ -76,10 +105,9 @@ const Comments: React.FC<CommentProps> = ({ postId }) => {
     const user = userString ? JSON.parse(userString) : null
     const userId = user ? user.id : null
 
-    const updatedCommentData: NewComment = {
-      postId,
+    const updatedCommentData: NewAppComment = {
+      postId: post.id,
       content: updatedCommentContent[id] || '',
-      author: user ? user.name : 'Unknown',
       userId,
     }
 
@@ -90,6 +118,7 @@ const Comments: React.FC<CommentProps> = ({ postId }) => {
           comment.id === id ? updatedComment : comment
         )
       )
+      onCommentAdded()
     } catch (err) {
       console.error(err)
     }
@@ -101,6 +130,7 @@ const Comments: React.FC<CommentProps> = ({ postId }) => {
       setComments((prevComments) =>
         prevComments.filter((comment) => comment.id !== id)
       )
+      onCommentDeleted()
     } catch (err) {
       console.error(err)
     }
@@ -119,21 +149,22 @@ const Comments: React.FC<CommentProps> = ({ postId }) => {
           onChange={(e) => setNewCommentContent(e.target.value)}
           placeholder="Write a comment..."
         />
-        <button
-          className="bg-blue-500 text-white py-2 px-4 rounded"
-          type="submit"
-        >
+        <button className="text-blue-500 hover:underline" type="submit">
           Add Comment
         </button>
       </form>
       {comments.map((comment) => (
-        <div key={comment.id} className="mt-5">
-          <p className="text-gray-700">{comment.content}</p>
+        <div key={comment.id} className="bg-white shadow rounded-lg p-6 mb-4">
+          <p className="text-lg">{comment.content}</p>
+          <p className="text-sm text-gray-500">
+            Commented by: {comment.User.username} at{' '}
+            {new Date(comment.createdAt).toLocaleString()}
+          </p>
           {editingCommentId === comment.id ? (
             <>
               <input
                 type="text"
-                className="p-2 border rounded"
+                className="p-2 border rounded mt-4"
                 value={updatedCommentContent[comment.id] || ''}
                 onChange={(e) =>
                   setUpdatedCommentContent({
@@ -143,35 +174,39 @@ const Comments: React.FC<CommentProps> = ({ postId }) => {
                 }
                 placeholder="Edit comment..."
               />
-              <div className="flex space-x-2 mt-2">
-                <button
-                  className="bg-green-500 text-white py-2 px-4 rounded"
-                  onClick={() => handleCommentUpdate(comment.id)}
-                >
-                  Save Comment
-                </button>
-                <button
-                  className="bg-gray-500 text-white py-2 px-4 rounded"
-                  onClick={handleCancelEdit}
-                >
-                  Cancel
-                </button>
+              <div className="flex items-center justify-between mt-4">
+                <div>
+                  <button
+                    onClick={() => handleCommentUpdate(comment.id)}
+                    className="text-green-500 hover:underline mr-4"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="text-gray-500 hover:underline"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </>
           ) : (
-            <div className="flex space-x-2 mt-2">
-              <button
-                className="bg-yellow-500 text-white py-2 px-4 rounded"
-                onClick={() => handleStartEdit(comment.id, comment.content)}
-              >
-                Edit Comment
-              </button>
-              <button
-                className="bg-red-500 text-white py-2 px-4 rounded"
-                onClick={() => handleCommentDelete(comment.id)}
-              >
-                Delete Comment
-              </button>
+            <div className="flex items-center justify-between mt-4">
+              <div>
+                <button
+                  onClick={() => handleStartEdit(comment.id, comment.content)}
+                  className="text-yellow-500 hover:underline mr-4"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleCommentDelete(comment.id)}
+                  className="text-red-500 hover:underline"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           )}
         </div>
