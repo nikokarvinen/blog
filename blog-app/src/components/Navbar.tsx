@@ -1,68 +1,54 @@
+import { faBlog } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import axios from 'axios'
-import { useContext } from 'react'
 import { Link } from 'react-router-dom'
-import { UserContext } from '../contexts/UserContext' // Import UserContext
+import { useUser } from '../contexts/useUser'
 
 axios.defaults.withCredentials = true
 
 const Navbar = () => {
-  const { user } = useContext(UserContext) // Get user from UserContext
+  const { user } = useUser()
 
   return (
-    <nav className="bg-gray-800" style={{ height: '60px' }}>
-      <ul className="flex justify-between items-center px-5 py-3">
+    <nav className="bg-gray-900 text-white py-4 shadow-md">
+      <ul className="flex justify-between items-center px-10">
         <li>
           <Link
             to="/"
-            className="text-white hover:text-gray-300 text-xl font-semibold"
-            style={{ fontSize: '1.5rem' }}
+            className="text-2xl font-bold tracking-widest text-white hover:text-gray-200 flex items-center"
           >
-            Home
+            Blogify <FontAwesomeIcon icon={faBlog} className="ml-2" />
           </Link>
         </li>
-        {user && ( // Check if user exists in UserContext
-          <li>
-            <Link
-              to="/create-post"
-              className="text-white hover:text-gray-300 text-xl font-semibold"
-              style={{ fontSize: '1.5rem' }}
-            >
-              Create Post
-            </Link>
-          </li>
-        )}
-        {user ? (
-          <li>
-            <Link
-              to="/settings"
-              className="text-white hover:text-gray-300 text-xl font-semibold"
-              style={{ fontSize: '1.5rem' }}
-            >
-              {user.username}
-            </Link>
-          </li>
-        ) : (
-          <>
+        <div className="space-x-6">
+          {user && (
             <li>
-              <Link
-                to="/login"
-                className="text-white text-xl hover:text-gray-300 font-semibold"
-                style={{ fontSize: '1.5rem' }}
-              >
-                Login
+              <Link to="/create-post" className="text-lg hover:text-gray-200">
+                Create Post
               </Link>
             </li>
+          )}
+          {user ? (
             <li>
-              <Link
-                to="/register"
-                className="text-white hover:text-gray-300 text-xl font-semibold"
-                style={{ fontSize: '1.5rem' }}
-              >
-                Register
+              <Link to="/settings" className="text-lg hover:text-gray-200">
+                {user.username}
               </Link>
             </li>
-          </>
-        )}
+          ) : (
+            <>
+              <li>
+                <Link to="/login" className="text-lg hover:text-gray-200">
+                  Login
+                </Link>
+              </li>
+              <li>
+                <Link to="/register" className="text-lg hover:text-gray-200">
+                  Register
+                </Link>
+              </li>
+            </>
+          )}
+        </div>
       </ul>
     </nav>
   )

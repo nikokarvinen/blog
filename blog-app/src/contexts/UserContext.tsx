@@ -1,4 +1,9 @@
-import React, { ReactNode, createContext, useEffect, useState } from 'react'
+import React, {
+  ReactNode,
+  createContext,
+  useEffect,
+  useState,
+} from 'react'
 import { User, register as registerUser } from '../services/users'
 
 interface UserContextValue {

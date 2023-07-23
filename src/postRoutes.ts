@@ -69,7 +69,7 @@ router.get('/', authenticateToken, async (req, res) => {
             updatedAt: true,
           },
         },
-        comments: true, // Include comments here
+        comments: true,
       },
     })
 
@@ -78,7 +78,7 @@ router.get('/', authenticateToken, async (req, res) => {
       commentCount: post.comments.length,
     }))
 
-    res.json(postsWithCommentCount) // Return posts with comment count
+    res.json(postsWithCommentCount)
   } catch (error) {
     console.error('Error fetching posts:', error)
     res.status(500).json({ error: 'Failed to fetch posts' })

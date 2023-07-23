@@ -1,5 +1,6 @@
 import { AxiosError } from 'axios'
 import React, { useEffect, useState } from 'react'
+import { useUser } from '../contexts/useUser'
 import {
   AppComment,
   NewAppComment,
@@ -21,6 +22,8 @@ const Comments = ({
   onCommentAdded,
   onCommentDeleted,
 }: CommentsProps): JSX.Element => {
+  const { user } = useUser()
+
   const [comments, setComments] = useState<AppComment[]>([])
   const [newCommentContent, setNewCommentContent] = useState<string>('')
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
@@ -118,7 +121,7 @@ const Comments = ({
           comment.id === id ? updatedComment : comment
         )
       )
-      onCommentAdded()
+      handleCancelEdit()
     } catch (err) {
       console.error(err)
     }
@@ -160,55 +163,57 @@ const Comments = ({
             Commented by: {comment.User.username} at{' '}
             {new Date(comment.createdAt).toLocaleString()}
           </p>
-          {editingCommentId === comment.id ? (
-            <>
-              <input
-                type="text"
-                className="p-2 border rounded mt-4"
-                value={updatedCommentContent[comment.id] || ''}
-                onChange={(e) =>
-                  setUpdatedCommentContent({
-                    ...updatedCommentContent,
-                    [comment.id]: e.target.value,
-                  })
-                }
-                placeholder="Edit comment..."
-              />
+          {user?.id === comment.userId ? (
+            editingCommentId === comment.id ? (
+              <>
+                <input
+                  type="text"
+                  className="p-2 border rounded mt-4"
+                  value={updatedCommentContent[comment.id] || ''}
+                  onChange={(e) =>
+                    setUpdatedCommentContent({
+                      ...updatedCommentContent,
+                      [comment.id]: e.target.value,
+                    })
+                  }
+                  placeholder="Edit comment..."
+                />
+                <div className="flex items-center justify-between mt-4">
+                  <div>
+                    <button
+                      onClick={() => handleCommentUpdate(comment.id)}
+                      className="text-green-500 hover:underline mr-4"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="text-gray-500 hover:underline"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
               <div className="flex items-center justify-between mt-4">
                 <div>
                   <button
-                    onClick={() => handleCommentUpdate(comment.id)}
-                    className="text-green-500 hover:underline mr-4"
+                    onClick={() => handleStartEdit(comment.id, comment.content)}
+                    className="text-yellow-500 hover:underline mr-4"
                   >
-                    Save
+                    Edit
                   </button>
                   <button
-                    onClick={handleCancelEdit}
-                    className="text-gray-500 hover:underline"
+                    onClick={() => handleCommentDelete(comment.id)}
+                    className="text-red-500 hover:underline"
                   >
-                    Cancel
+                    Delete
                   </button>
                 </div>
               </div>
-            </>
-          ) : (
-            <div className="flex items-center justify-between mt-4">
-              <div>
-                <button
-                  onClick={() => handleStartEdit(comment.id, comment.content)}
-                  className="text-yellow-500 hover:underline mr-4"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleCommentDelete(comment.id)}
-                  className="text-red-500 hover:underline"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          )}
+            )
+          ) : null}
         </div>
       ))}
     </div>

@@ -13,6 +13,7 @@ const Settings = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     if (user) {
@@ -45,7 +46,8 @@ const Settings = () => {
       setPassword('')
     } catch (err) {
       console.error('Failed to update settings', err)
-      setSuccessMessage('Failed to update settings')
+      setErrorMessage('Failed to update settings')
+      setSuccessMessage('')
     }
   }
 
@@ -54,7 +56,15 @@ const Settings = () => {
       <h1 className="text-2xl font-semibold mb-6">Your Settings</h1>
 
       {successMessage && (
-        <p className="text-green-500 mb-4">{successMessage}</p>
+        <p className="mb-4 w-full text-center text-green-500 border border-green-500 p-2 rounded">
+          {successMessage}
+        </p>
+      )}
+
+      {errorMessage && (
+        <p className="mb-4 w-full text-center text-red-500 border border-red-500 p-2 rounded">
+          {errorMessage}
+        </p>
       )}
 
       <form onSubmit={handleUpdateSettings}>
@@ -89,7 +99,7 @@ const Settings = () => {
 
         <button
           type="submit"
-          className="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg mt-2 w-full"
         >
           Update Settings
         </button>
@@ -97,7 +107,7 @@ const Settings = () => {
 
       <button
         onClick={handleLogout}
-        className="mt-4 bg-red-500 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded"
+        className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg w-full"
       >
         Logout
       </button>
