@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import express, { Request, Response } from 'express'
-import { authenticateToken } from './routes'
+import { authenticateToken, refreshUserToken } from './authenticate'
 
 const prisma = new PrismaClient()
 
@@ -8,24 +8,32 @@ const router = express.Router()
 
 // CREATE a new comment
 router.post('/', authenticateToken, async (req, res) => {
-  const user = await prisma.user.findUnique({ where: { id: req.body.userId } })
+  // Use req.user directly instead of fetching the user from the database.
+  if (!req.user) {
+    return res.status(400).json({ error: 'User not authenticated' })
+  }
+
   const post = await prisma.post.findUnique({ where: { id: req.body.postId } })
 
-  // Check if user and post were found
-  if (!user || !post) {
-    return res.status(400).json({ error: 'User or Post not found' })
+  // Check if post was found
+  if (!post) {
+    return res.status(400).json({ error: 'Post not found' })
   }
 
   const NewAppComment = await prisma.comment.create({
     data: {
       content: req.body.content,
-      userId: user.id,
+      userId: req.user.id, // Use req.user.id instead of user.id
       postId: post.id,
     },
     include: {
       User: true,
     },
   })
+
+  // Refresh the user token
+  const token = refreshUserToken(req.user)
+  res.cookie('token', token, { httpOnly: true })
 
   res.json(NewAppComment)
 })
@@ -99,6 +107,12 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
     },
   })
 
+  // Refresh the user token
+  if (req.user) {
+    const token = refreshUserToken(req.user)
+    res.cookie('token', token, { httpOnly: true })
+  }
+
   res.json(updatedComment)
 })
 
@@ -107,6 +121,12 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   const deletedComment = await prisma.comment.delete({
     where: { id: parseInt(req.params.id) },
   })
+
+  // Refresh the user token
+  if (req.user) {
+    const token = refreshUserToken(req.user)
+    res.cookie('token', token, { httpOnly: true })
+  }
 
   res.json(deletedComment)
 })

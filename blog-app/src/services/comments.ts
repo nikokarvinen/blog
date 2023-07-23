@@ -50,7 +50,7 @@ export const getCommentsByPostId = async (
   postId: number
 ): Promise<CommentState[]> => {
   const response = await axios.get<CommentState[]>(
-    `${BASE_URL}/posts/${postId}/comments`
+    `${BASE_URL}/comments/posts/${postId}/comments`
   )
   return response.data
 }

@@ -4,18 +4,14 @@ import { Post as PostData, deletePost, getAllPosts } from '../services/posts'
 import Comments from './Comments'
 
 const Home = () => {
-  type PostWithCommentCount = PostData & { commentCount?: number }
+  type PostWithCommentCount = PostData & { commentCount: number }
   const [posts, setPosts] = useState<PostWithCommentCount[]>([])
   const [activePosts, setActivePosts] = useState<{ [id: number]: boolean }>({})
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        let data = await getAllPosts()
-        data = data.map((post) => ({
-          ...post,
-          commentCount: post.Comments?.length || 0,
-        }))
+        const data = await getAllPosts()
         setPosts(data)
       } catch (error) {
         console.error('Error fetching posts:', error)
@@ -89,7 +85,7 @@ const Home = () => {
               onClick={() => handleToggleComments(post)}
               className="text-blue-500 hover:underline"
             >
-              {(post.commentCount ?? 0) + ' Comments'}
+              {post.commentCount + ' Comments'}
             </button>
             <div style={{ display: activePosts[post.id] ? 'block' : 'none' }}>
               <Comments

@@ -1,6 +1,9 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, User as PrismaUser } from '@prisma/client'
 import express, { Request, Response } from 'express'
-import { authenticateToken } from './routes'
+import { authenticateToken, refreshUserToken } from './authenticate'
+
+// check if the application runs in a secure context (https)
+const secure = process.env.NODE_ENV !== 'development'
 
 const prisma = new PrismaClient()
 const router = express.Router()
@@ -11,6 +14,16 @@ router.post('/', authenticateToken, async (req, res) => {
     if (!req.user) {
       return res.status(403).json({ error: 'User not authenticated' })
     }
+
+    // Create a new JWT every time the user accesses an authenticated route
+    const accessToken = refreshUserToken(req.user)
+
+    // Set the JWT as a cookie in the response
+    res.cookie('token', accessToken, {
+      httpOnly: true,
+      sameSite: 'none',
+      secure,
+    })
 
     // Use prisma client to create a new post in our database
     const newPost = await prisma.post.create({
@@ -28,8 +41,22 @@ router.post('/', authenticateToken, async (req, res) => {
 })
 
 // READ all posts
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(403).json({ error: 'User not authenticated' })
+    }
+
+    // Create a new JWT every time the user accesses an authenticated route
+    const accessToken = refreshUserToken(req.user)
+
+    // Set the JWT as a cookie in the response
+    res.cookie('token', accessToken, {
+      httpOnly: true,
+      sameSite: 'none',
+      secure,
+    })
+
     // Use prisma client to get all posts from our database
     const posts = await prisma.post.findMany({
       include: {
@@ -42,9 +69,16 @@ router.get('/', async (req, res) => {
             updatedAt: true,
           },
         },
+        comments: true, // Include comments here
       },
     })
-    res.json(posts)
+
+    const postsWithCommentCount = posts.map((post) => ({
+      ...post,
+      commentCount: post.comments.length,
+    }))
+
+    res.json(postsWithCommentCount) // Return posts with comment count
   } catch (error) {
     console.error('Error fetching posts:', error)
     res.status(500).json({ error: 'Failed to fetch posts' })
@@ -134,6 +168,26 @@ router.get('/user/:userId/posts', async (req, res) => {
   } catch (error) {
     console.error('Error fetching user posts:', error)
     res.status(500).json({ error: 'Failed to fetch user posts' })
+  }
+})
+
+// READ all comments for a specific post
+router.get('/:postId/comments', async (req, res) => {
+  const postId = parseInt(req.params.postId)
+
+  const comments = await prisma.comment.findMany({
+    where: {
+      postId: postId,
+    },
+    include: {
+      User: true,
+    },
+  })
+
+  if (comments.length > 0) {
+    res.json(comments)
+  } else {
+    res.status(200).json([])
   }
 })
 

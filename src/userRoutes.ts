@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
 import express, { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
-import { authenticateToken } from './routes'
+import { authenticateToken } from './authenticate'
 
 dotenv.config()
 
@@ -64,7 +64,8 @@ router.post(
       if (user && (await bcrypt.compare(password, user.password))) {
         const accessToken = jwt.sign(
           { id: user.id },
-          process.env.JWT_SECRET || 'secret'
+          process.env.JWT_SECRET || 'secret',
+          { expiresIn: '1h' } // JWT expires in 1 hour
         )
 
         res.cookie('token', accessToken, {
@@ -85,15 +86,9 @@ router.post(
 
 // Logout
 router.post('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error('Failed to destroy session:', err)
-      res.status(500).json({ error: 'Failed to log out' })
-    } else {
-      res.clearCookie('session_id') // Clear the session cookie
-      res.sendStatus(200)
-    }
-  })
+  // Clear the JWT token cookie
+  res.clearCookie('token')
+  res.sendStatus(200)
 })
 
 // READ all users
@@ -129,7 +124,7 @@ router.put('/:id', async (req: Request, res: Response) => {
   const { username, email, password } = req.body as {
     username: string
     email: string
-    password?: string // Make the password field optional
+    password?: string
   }
 
   try {

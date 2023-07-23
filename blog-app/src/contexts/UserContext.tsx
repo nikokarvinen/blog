@@ -1,11 +1,7 @@
-import React, { createContext, useEffect, useState } from 'react'
-import {
-  User,
-  login as loginUser,
-  register as registerUser,
-} from '../services/users'
+import React, { ReactNode, createContext, useEffect, useState } from 'react'
+import { User, register as registerUser } from '../services/users'
 
-interface UserContext {
+interface UserContextValue {
   user: User | null
   login: (email: string, password: string) => Promise<User | null>
   register: (
@@ -17,12 +13,14 @@ interface UserContext {
 }
 
 interface UserProviderProps {
-  children: React.ReactNode
+  children: ReactNode
 }
 
-const UserContext = createContext<UserContext>({} as UserContext)
+export const UserContext = createContext<UserContextValue | undefined>(
+  undefined
+)
 
-const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
+export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
@@ -36,12 +34,27 @@ const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     email: string,
     password: string
   ): Promise<User | null> => {
-    const user = await loginUser(email, password)
-    if (user) {
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Login failed')
+      }
+
+      const user: User = await response.json()
       localStorage.setItem('user', JSON.stringify(user))
+      setUser(user)
+      return user
+    } catch (error) {
+      console.error(error)
+      return null
     }
-    setUser(user)
-    return user
   }
 
   const register = async (
@@ -62,11 +75,7 @@ const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     setUser(null)
   }
 
-  return (
-    <UserContext.Provider value={{ user, login, register, logout }}>
-      {children}
-    </UserContext.Provider>
-  )
-}
+  const value: UserContextValue = { user, login, register, logout }
 
-export { UserContext, UserProvider }
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>
+}

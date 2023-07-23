@@ -5,6 +5,10 @@ axios.defaults.withCredentials = true
 
 const BASE_URL = import.meta.env.VITE_APP_BASE_URL
 
+export interface PostWithCommentCount extends Post {
+  commentCount: number
+}
+
 export interface Post {
   id: number
   title: string
@@ -32,7 +36,7 @@ export interface PostInput {
 }
 
 export const getAllPosts = async () => {
-  const response = await axios.get<Post[]>(`${BASE_URL}/posts`)
+  const response = await axios.get<PostWithCommentCount[]>(`${BASE_URL}/posts`)
   return response.data
 }
 
