@@ -48,6 +48,8 @@ npm run dev
 Settings Page
 ![settings](./images/settings1.jpg)
 
-
 Login Page
 ![login](./images/login.jpg)
+
+Create New Post Page
+![newpost](./images/post1.jpg)
