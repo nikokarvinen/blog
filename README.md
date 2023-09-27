@@ -1,6 +1,6 @@
 # Blog app
 
-This project was built for fun and to delve deeper into the modern web development ecosystem. The technologies under the hood have been carefully chosen to deliver a modern, efficient, and robust experience.
+This project was built for fun and to delve deeper into the modern web development ecosystem. The technologies under the hood have been carefully chosen to deliver a modern, efficient, and robust experience. This project is still in progress with more features to come.
 
 ![frontpage](./images/front.jpg)
 
@@ -43,6 +43,11 @@ npm run start
 npm run dev
 ```
 
+## Screenshots
+
+Settings Page
 ![settings](./images/settings1.jpg)
 
+
+Login Page
 ![login](./images/login.jpg)
