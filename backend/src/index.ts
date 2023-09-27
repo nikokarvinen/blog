@@ -14,7 +14,9 @@ if (!process.env.JWT_SECRET || !process.env.PORT) {
   process.exit(1)
 }
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient({
+  log: ['query', 'info', 'warn', 'error'],
+})
 
 process.on('exit', async () => {
   await prisma.$disconnect()
